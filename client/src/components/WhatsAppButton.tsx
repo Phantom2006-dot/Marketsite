@@ -14,12 +14,12 @@ export default function WhatsAppButton({ phoneNumber }: WhatsAppButtonProps) {
   return (
     <Button
       size="icon"
-      className="fixed bottom-6 right-6 h-16 w-16 rounded-full shadow-2xl bg-[#25D366] hover:bg-[#20BA59] text-white z-50 animate-pulse"
+      className="fixed bottom-4 right-4 md:bottom-6 md:right-6 h-14 w-14 md:h-16 md:w-16 rounded-full shadow-2xl bg-[#25D366] hover:bg-[#20BA59] text-white z-50 animate-pulse"
       onClick={handleClick}
       data-testid="button-whatsapp"
       aria-label="Contact us on WhatsApp"
     >
-      <MessageCircle className="h-8 w-8" />
+      <MessageCircle className="h-7 w-7 md:h-8 md:w-8" />
     </Button>
   );
 }
