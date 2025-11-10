@@ -26,6 +26,13 @@ export default function CategoryPage() {
     queryKey: ["/api/categories"],
   });
 
+  // Transform categories for Navbar
+  const navbarCategories =
+    categories?.map((cat) => ({
+      name: cat.name,
+      slug: cat.slug,
+    })) || [];
+
   const {
     data: category,
     isLoading: categoryLoading,
@@ -87,7 +94,7 @@ export default function CategoryPage() {
   if (categoriesLoading || categoryLoading) {
     return (
       <div className="min-h-screen">
-        <Navbar categories={categories || []} />
+        <Navbar categories={navbarCategories} />
         <div className="flex items-center justify-center h-96">
           <p className="text-muted-foreground">Loading category...</p>
         </div>
@@ -100,7 +107,7 @@ export default function CategoryPage() {
     console.log("Category not found - both API and local search failed");
     return (
       <div className="min-h-screen">
-        <Navbar categories={categories || []} />
+        <Navbar categories={navbarCategories} />
         <div className="flex items-center justify-center h-96">
           <div className="text-center">
             <p className="text-muted-foreground mb-2">Category not found</p>
@@ -125,7 +132,7 @@ export default function CategoryPage() {
     console.error("Category has no ID:", displayCategory);
     return (
       <div className="min-h-screen">
-        <Navbar categories={categories || []} />
+        <Navbar categories={navbarCategories} />
         <div className="flex items-center justify-center h-96">
           <p className="text-muted-foreground">Invalid category data</p>
         </div>
@@ -133,50 +140,72 @@ export default function CategoryPage() {
     );
   }
 
-  const images = categoryImages?.map((img) => img.url) || [];
+  // FIXED: Use both categoryImages AND primaryImageUrl as fallback
+  const images =
+    categoryImages?.map((img) => img.url) ||
+    (displayCategory?.primaryImageUrl ? [displayCategory.primaryImageUrl] : []);
+
   const hasImages = images.length > 0;
+
+  // Debug images
+  console.log("Category images:", categoryImages);
+  console.log("Primary image URL:", displayCategory?.primaryImageUrl);
+  console.log("Final images for carousel:", images);
 
   return (
     <div className="min-h-screen">
-      <Navbar categories={categories || []} />
+      <Navbar categories={navbarCategories} />
 
-      <div className="relative h-96 flex items-end">
+      {/* FIXED: Simplified hero section without ImageCarousel issues */}
+      <div className="relative h-96 bg-muted overflow-hidden">
         {hasImages ? (
-          <ImageCarousel
-            images={images}
-            aspectRatio="h-96"
-            className="absolute inset-0"
-            showControls={images.length > 1}
-          />
+          // Simple image display without carousel issues
+          <div className="absolute inset-0 flex items-center justify-center">
+            <img
+              src={images[0]}
+              alt={displayCategory?.name}
+              className="w-full h-full object-cover"
+            />
+          </div>
         ) : (
-          <div className="absolute inset-0 bg-muted" />
+          <div className="absolute inset-0 bg-muted flex items-center justify-center">
+            <p className="text-muted-foreground text-lg">
+              No category images available
+            </p>
+          </div>
         )}
         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent" />
 
-        <div className="relative z-10 px-4 pb-12 max-w-7xl mx-auto w-full">
-          <div className="flex items-center gap-2 text-white/80 text-sm mb-4">
-            <Link href="/" className="hover:text-white">
-              Home
-            </Link>
-            <ChevronRight className="h-4 w-4" />
-            <span data-testid="text-breadcrumb-category">
-              {displayCategory?.name}
-            </span>
-          </div>
-          <h1
-            className="font-['DM_Sans'] font-bold text-4xl md:text-5xl text-white mb-3"
-            data-testid="text-category-name"
-          >
-            {displayCategory?.name}
-          </h1>
-          {displayCategory?.description && (
-            <p
-              className="text-white/90 text-lg max-w-3xl"
-              data-testid="text-category-description"
+        <div className="relative z-10 px-4 pb-12 max-w-7xl mx-auto w-full h-full flex items-end">
+          <div className="w-full">
+            <div className="flex items-center gap-2 text-white/80 text-sm mb-4">
+              <Link href="/" className="hover:text-white">
+                Home
+              </Link>
+              <ChevronRight className="h-4 w-4" />
+              <Link href="/categories" className="hover:text-white">
+                Categories
+              </Link>
+              <ChevronRight className="h-4 w-4" />
+              <span data-testid="text-breadcrumb-category">
+                {displayCategory?.name}
+              </span>
+            </div>
+            <h1
+              className="font-['DM_Sans'] font-bold text-4xl md:text-5xl text-white mb-3"
+              data-testid="text-category-name"
             >
-              {displayCategory.description}
-            </p>
-          )}
+              {displayCategory?.name}
+            </h1>
+            {displayCategory?.description && (
+              <p
+                className="text-white/90 text-lg max-w-3xl"
+                data-testid="text-category-description"
+              >
+                {displayCategory.description}
+              </p>
+            )}
+          </div>
         </div>
       </div>
 
