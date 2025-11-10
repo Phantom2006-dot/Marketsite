@@ -44,15 +44,6 @@ export default function AdminCategories() {
         body: JSON.stringify(data),
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
-      toast({ title: "Category created successfully" });
-      setIsDialogOpen(false);
-      form.reset();
-    },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
   });
 
   const updateMutation = useMutation({
@@ -61,16 +52,6 @@ export default function AdminCategories() {
         method: "PATCH",
         body: JSON.stringify(data),
       });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
-      toast({ title: "Category updated successfully" });
-      setIsDialogOpen(false);
-      setEditingCategory(null);
-      form.reset();
-    },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -94,12 +75,10 @@ export default function AdminCategories() {
       let categoryId: number;
       
       if (editingCategory) {
-        const response = await updateMutation.mutateAsync({ id: editingCategory.id, data });
-        const result = await response.json();
+        await updateMutation.mutateAsync({ id: editingCategory.id, data });
         categoryId = editingCategory.id;
       } else {
-        const response = await createMutation.mutateAsync(data);
-        const result = await response.json();
+        const result = await createMutation.mutateAsync(data);
         categoryId = result.id;
       }
       
@@ -135,8 +114,7 @@ export default function AdminCategories() {
     
     // Fetch existing images
     try {
-      const response = await apiRequest(`/api/categories/${category.id}/images`);
-      const images = await response.json();
+      const images = await apiRequest(`/api/categories/${category.id}/images`);
       setExistingImages(images);
       setImageUrls([""]);
     } catch (error) {
@@ -151,6 +129,7 @@ export default function AdminCategories() {
     try {
       await apiRequest(`/api/category-images/${imageId}`, { method: "DELETE" });
       setExistingImages(existingImages.filter(img => img.id !== imageId));
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
       toast({ title: "Image deleted successfully" });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });

@@ -53,15 +53,6 @@ export default function AdminProducts() {
         body: JSON.stringify(data),
       });
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      toast({ title: "Product created successfully" });
-      setIsDialogOpen(false);
-      form.reset();
-    },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
-    },
   });
 
   const updateMutation = useMutation({
@@ -70,16 +61,6 @@ export default function AdminProducts() {
         method: "PATCH",
         body: JSON.stringify(data),
       });
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
-      toast({ title: "Product updated successfully" });
-      setIsDialogOpen(false);
-      setEditingProduct(null);
-      form.reset();
-    },
-    onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
     },
   });
 
@@ -103,12 +84,10 @@ export default function AdminProducts() {
       let productId: number;
       
       if (editingProduct) {
-        const response = await updateMutation.mutateAsync({ id: editingProduct.id, data });
-        const result = await response.json();
+        await updateMutation.mutateAsync({ id: editingProduct.id, data });
         productId = editingProduct.id;
       } else {
-        const response = await createMutation.mutateAsync(data);
-        const result = await response.json();
+        const result = await createMutation.mutateAsync(data);
         productId = result.id;
       }
       
@@ -148,8 +127,7 @@ export default function AdminProducts() {
     
     // Fetch existing images
     try {
-      const response = await apiRequest(`/api/products/${product.id}/images`);
-      const images = await response.json();
+      const images = await apiRequest(`/api/products/${product.id}/images`);
       setExistingImages(images);
       setImageUrls([""]);
     } catch (error) {
@@ -164,6 +142,7 @@ export default function AdminProducts() {
     try {
       await apiRequest(`/api/product-images/${imageId}`, { method: "DELETE" });
       setExistingImages(existingImages.filter(img => img.id !== imageId));
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
       toast({ title: "Image deleted successfully" });
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
