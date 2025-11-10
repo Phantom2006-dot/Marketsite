@@ -4,7 +4,7 @@ import { Menu, X, ShoppingBag, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useQuery } from "@tanstack/react-query";
-import type { SiteSetting } from "@shared/schema";
+import type { SiteSetting, Category } from "@shared/schema";
 
 export function CustomerNav() {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -14,7 +14,12 @@ export function CustomerNav() {
     queryKey: ["/api/settings"],
   });
 
+  const { data: categories } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
+
   const storeName = settings?.storeName || "AL-MUSLIMAH CLOTHINGS & SHOES";
+  const displayCategories = categories?.filter(cat => cat.slug && cat.name).slice(0, 5) || [];
   
   const canGoBack = location !== "/";
 
@@ -45,6 +50,13 @@ export function CustomerNav() {
           </div>
 
           <div className="hidden md:flex items-center gap-4">
+            {displayCategories.map((category) => (
+              <Link key={category.id} href={`/category/${category.slug}`}>
+                <Button variant="ghost" size="sm" data-testid={`link-category-${category.slug}`}>
+                  {category.name}
+                </Button>
+              </Link>
+            ))}
             <Link href="/login">
               <Button variant="ghost" size="sm" data-testid="link-admin">
                 Admin
@@ -83,6 +95,18 @@ export function CustomerNav() {
                   Home
                 </Button>
               </Link>
+              {displayCategories.map((category) => (
+                <Link key={category.id} href={`/category/${category.slug}`}>
+                  <Button
+                    variant="ghost"
+                    className="w-full justify-start"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                    data-testid={`link-category-${category.slug}-mobile`}
+                  >
+                    {category.name}
+                  </Button>
+                </Link>
+              ))}
               <Link href="/login">
                 <Button
                   variant="ghost"
