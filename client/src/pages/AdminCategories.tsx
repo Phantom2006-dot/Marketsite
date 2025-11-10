@@ -4,20 +4,23 @@ import { AdminNav } from "@/components/AdminNav";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertCategorySchema, type Category } from "@shared/schema";
+import { insertCategorySchema, type Category, type CategoryImage } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminCategories() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([""]);
+  const [existingImages, setExistingImages] = useState<CategoryImage[]>([]);
   const { toast } = useToast();
 
   const { data: categories, isLoading } = useQuery<Category[]>({
@@ -30,7 +33,6 @@ export default function AdminCategories() {
       name: "",
       slug: "",
       description: "",
-      imageUrl: "",
       order: 0,
     },
   });
@@ -87,24 +89,86 @@ export default function AdminCategories() {
     },
   });
 
-  const handleSubmit = (data: any) => {
-    if (editingCategory) {
-      updateMutation.mutate({ id: editingCategory.id, data });
-    } else {
-      createMutation.mutate(data);
+  const handleSubmit = async (data: any) => {
+    try {
+      let categoryId: number;
+      
+      if (editingCategory) {
+        const response = await updateMutation.mutateAsync({ id: editingCategory.id, data });
+        const result = await response.json();
+        categoryId = editingCategory.id;
+      } else {
+        const response = await createMutation.mutateAsync(data);
+        const result = await response.json();
+        categoryId = result.id;
+      }
+      
+      // Save new images
+      const validImageUrls = imageUrls.filter(url => url.trim());
+      for (let i = 0; i < validImageUrls.length; i++) {
+        await apiRequest(`/api/categories/${categoryId}/images`, {
+          method: "POST",
+          body: JSON.stringify({ url: validImageUrls[i], order: i }),
+        });
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/categories"] });
+      toast({ title: editingCategory ? "Category updated successfully" : "Category created successfully" });
+      setIsDialogOpen(false);
+      setEditingCategory(null);
+      form.reset();
+      setImageUrls([""]);
+      setExistingImages([]);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
-  const handleEdit = (category: Category) => {
+  const handleEdit = async (category: Category) => {
     setEditingCategory(category);
     form.reset({
       name: category.name,
       slug: category.slug,
       description: category.description || "",
-      imageUrl: category.imageUrl || "",
       order: category.order,
     });
+    
+    // Fetch existing images
+    try {
+      const response = await apiRequest(`/api/categories/${category.id}/images`);
+      const images = await response.json();
+      setExistingImages(images);
+      setImageUrls([""]);
+    } catch (error) {
+      setExistingImages([]);
+      setImageUrls([""]);
+    }
+    
     setIsDialogOpen(true);
+  };
+  
+  const handleDeleteExistingImage = async (imageId: number) => {
+    try {
+      await apiRequest(`/api/category-images/${imageId}`, { method: "DELETE" });
+      setExistingImages(existingImages.filter(img => img.id !== imageId));
+      toast({ title: "Image deleted successfully" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+  
+  const addImageUrl = () => {
+    setImageUrls([...imageUrls, ""]);
+  };
+  
+  const removeImageUrl = (index: number) => {
+    setImageUrls(imageUrls.filter((_, i) => i !== index));
+  };
+  
+  const updateImageUrl = (index: number, value: string) => {
+    const newUrls = [...imageUrls];
+    newUrls[index] = value;
+    setImageUrls(newUrls);
   };
 
   const handleDelete = (id: number) => {
@@ -133,6 +197,8 @@ export default function AdminCategories() {
             if (!open) {
               setEditingCategory(null);
               form.reset();
+              setImageUrls([""]);
+              setExistingImages([]);
             }
           }}>
             <DialogTrigger asChild>
@@ -200,19 +266,66 @@ export default function AdminCategories() {
                     )}
                   />
 
-                  <FormField
-                    control={form.control}
-                    name="imageUrl"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Image URL (optional)</FormLabel>
-                        <FormControl>
-                          <Input {...field} placeholder="https://example.com/image.jpg" data-testid="input-image-url" />
-                        </FormControl>
-                        <FormMessage />
-                      </FormItem>
+                  <div className="space-y-4">
+                    <Label>Category Images</Label>
+                    
+                    {existingImages.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">Existing Images</p>
+                        <div className="space-y-2">
+                          {existingImages.map((image) => (
+                            <div key={image.id} className="flex items-center gap-2">
+                              <Input value={image.url} disabled className="flex-1" />
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleDeleteExistingImage(image.id)}
+                                data-testid={`button-delete-image-${image.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
                     )}
-                  />
+
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Add New Images</p>
+                      {imageUrls.map((url, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input
+                            value={url}
+                            onChange={(e) => updateImageUrl(index, e.target.value)}
+                            placeholder="https://example.com/image.jpg"
+                            data-testid={`input-image-url-${index}`}
+                          />
+                          {imageUrls.length > 1 && (
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => removeImageUrl(index)}
+                              data-testid={`button-remove-image-${index}`}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addImageUrl}
+                        data-testid="button-add-image-url"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Another Image
+                      </Button>
+                    </div>
+                  </div>
 
                   <FormField
                     control={form.control}
@@ -278,12 +391,6 @@ export default function AdminCategories() {
               <Card key={category.id}>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-6">
-                    {category.imageUrl && (
-                      <div
-                        className="w-32 h-24 bg-cover bg-center rounded-md flex-shrink-0"
-                        style={{ backgroundImage: `url(${category.imageUrl})` }}
-                      />
-                    )}
                     <div className="flex-1">
                       <h3 className="font-semibold text-lg mb-1" data-testid={`text-category-${category.id}`}>
                         {category.name}

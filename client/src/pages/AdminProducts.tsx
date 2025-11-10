@@ -33,9 +33,7 @@ export default function AdminProducts() {
   });
 
   const form = useForm({
-    resolver: zodResolver(insertProductSchema.extend({
-      categoryId: insertProductSchema.shape.categoryId.nullable(),
-    })),
+    resolver: zodResolver(insertProductSchema),
     defaultValues: {
       name: "",
       slug: "",
@@ -44,7 +42,7 @@ export default function AdminProducts() {
       size: "",
       weight: "",
       quantity: 0,
-      categoryId: null,
+      categoryId: 0,
     },
   });
 
@@ -105,10 +103,12 @@ export default function AdminProducts() {
       let productId: number;
       
       if (editingProduct) {
-        const result = await updateMutation.mutateAsync({ id: editingProduct.id, data });
+        const response = await updateMutation.mutateAsync({ id: editingProduct.id, data });
+        const result = await response.json();
         productId = editingProduct.id;
       } else {
-        const result = await createMutation.mutateAsync(data);
+        const response = await createMutation.mutateAsync(data);
+        const result = await response.json();
         productId = result.id;
       }
       
@@ -122,6 +122,10 @@ export default function AdminProducts() {
       }
       
       queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      toast({ title: editingProduct ? "Product updated successfully" : "Product created successfully" });
+      setIsDialogOpen(false);
+      setEditingProduct(null);
+      form.reset();
       setImageUrls([""]);
       setExistingImages([]);
     } catch (error: any) {
@@ -144,7 +148,8 @@ export default function AdminProducts() {
     
     // Fetch existing images
     try {
-      const images = await apiRequest(`/api/products/${product.id}/images`);
+      const response = await apiRequest(`/api/products/${product.id}/images`);
+      const images = await response.json();
       setExistingImages(images);
       setImageUrls([""]);
     } catch (error) {
