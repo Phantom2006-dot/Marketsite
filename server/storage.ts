@@ -1,4 +1,4 @@
-import { eq, desc } from "drizzle-orm";
+import { eq, desc, sql, and } from "drizzle-orm";
 import { db } from "./db";
 import {
   type User,
@@ -86,7 +86,35 @@ export class DatabaseStorage implements IStorage {
 
   // Category operations
   async getCategories(): Promise<Category[]> {
-    return db.select().from(categories).orderBy(categories.order, categories.name);
+    const categoryImagesRanked = db
+      .select({
+        id: categoryImages.id,
+        url: categoryImages.url,
+        categoryId: categoryImages.categoryId,
+        rank: sql<number>`row_number() over (partition by ${categoryImages.categoryId} order by ${categoryImages.order} asc, ${categoryImages.id} asc)`.as('rank')
+      })
+      .from(categoryImages)
+      .as("category_images_ranked");
+
+    const rows = await db
+      .select({
+        category: categories,
+        primaryImageUrl: categoryImagesRanked.url,
+      })
+      .from(categories)
+      .leftJoin(
+        categoryImagesRanked,
+        and(
+          eq(categoryImagesRanked.categoryId, categories.id),
+          eq(categoryImagesRanked.rank, 1)
+        ),
+      )
+      .orderBy(categories.order, categories.name);
+
+    return rows.map(({ category, primaryImageUrl }) => ({
+      ...category,
+      primaryImageUrl: primaryImageUrl ?? undefined,
+    }));
   }
 
   async getCategory(id: number): Promise<Category | undefined> {
@@ -135,7 +163,35 @@ export class DatabaseStorage implements IStorage {
 
   // Product operations
   async getProducts(): Promise<Product[]> {
-    return db.select().from(products).orderBy(desc(products.createdAt));
+    const productImagesRanked = db
+      .select({
+        id: productImages.id,
+        url: productImages.url,
+        productId: productImages.productId,
+        rank: sql<number>`row_number() over (partition by ${productImages.productId} order by ${productImages.order} asc, ${productImages.id} asc)`.as('rank')
+      })
+      .from(productImages)
+      .as("product_images_ranked");
+
+    const rows = await db
+      .select({
+        product: products,
+        primaryImageUrl: productImagesRanked.url,
+      })
+      .from(products)
+      .leftJoin(
+        productImagesRanked,
+        and(
+          eq(productImagesRanked.productId, products.id),
+          eq(productImagesRanked.rank, 1)
+        ),
+      )
+      .orderBy(desc(products.createdAt));
+
+    return rows.map(({ product, primaryImageUrl }) => ({
+      ...product,
+      primaryImageUrl: primaryImageUrl ?? undefined,
+    }));
   }
 
   async getProduct(id: number): Promise<Product | undefined> {

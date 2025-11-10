@@ -78,11 +78,16 @@ export default function HomePage() {
               {categories.map((category) => (
                 <Link key={category.id} href={`/category/${category.slug}`}>
                   <Card className="hover-elevate cursor-pointer h-full">
-                    {category.imageUrl && (
+                    {category.primaryImageUrl ? (
                       <div
                         className="h-40 bg-cover bg-center rounded-t-md"
-                        style={{ backgroundImage: `url(${category.imageUrl})` }}
+                        style={{ backgroundImage: `url(${category.primaryImageUrl})` }}
+                        data-testid={`img-category-${category.id}`}
                       />
+                    ) : (
+                      <div className="h-40 bg-muted flex items-center justify-center rounded-t-md">
+                        <span className="text-muted-foreground">No Image</span>
+                      </div>
                     )}
                     <CardHeader>
                       <CardTitle data-testid={`text-category-${category.id}`}>{category.name}</CardTitle>
@@ -113,9 +118,17 @@ export default function HomePage() {
               {products.slice(0, 8).map((product) => (
                 <Link key={product.id} href={`/product/${product.slug}`}>
                   <Card className="hover-elevate cursor-pointer h-full flex flex-col" data-testid={`card-product-${product.id}`}>
-                    <div className="h-48 bg-muted flex items-center justify-center rounded-t-md">
-                      <span className="text-muted-foreground">No Image</span>
-                    </div>
+                    {product.primaryImageUrl ? (
+                      <div
+                        className="h-48 bg-cover bg-center rounded-t-md"
+                        style={{ backgroundImage: `url(${product.primaryImageUrl})` }}
+                        data-testid={`img-product-${product.id}`}
+                      />
+                    ) : (
+                      <div className="h-48 bg-muted flex items-center justify-center rounded-t-md">
+                        <span className="text-muted-foreground">No Image</span>
+                      </div>
+                    )}
                     <CardHeader className="flex-1">
                       <CardTitle className="text-lg" data-testid={`text-product-${product.id}`}>
                         {product.name}

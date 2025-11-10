@@ -138,13 +138,17 @@ export type InsertUser = z.infer<typeof insertUserSchema>;
 export type User = typeof users.$inferSelect;
 
 export type InsertCategory = z.infer<typeof insertCategorySchema>;
-export type Category = typeof categories.$inferSelect;
+export type Category = typeof categories.$inferSelect & {
+  primaryImageUrl?: string;
+};
 
 export type InsertCategoryImage = z.infer<typeof insertCategoryImageSchema>;
 export type CategoryImage = typeof categoryImages.$inferSelect;
 
 export type InsertProduct = z.infer<typeof insertProductSchema>;
-export type Product = typeof products.$inferSelect;
+export type Product = typeof products.$inferSelect & {
+  primaryImageUrl?: string;
+};
 
 export type InsertProductImage = z.infer<typeof insertProductImageSchema>;
 export type ProductImage = typeof productImages.$inferSelect;
