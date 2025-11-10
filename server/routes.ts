@@ -321,18 +321,29 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // File upload endpoint
-  app.post("/api/upload", upload.single('file'), async (req, res) => {
-    try {
+  // File upload endpoint with proper error handling
+  app.post("/api/upload", (req, res) => {
+    upload.single('file')(req, res, (err) => {
+      if (err) {
+        if (err instanceof multer.MulterError) {
+          // Handle Multer-specific errors
+          if (err.code === 'LIMIT_FILE_SIZE') {
+            return res.status(400).json({ message: "File size exceeds 5MB limit" });
+          }
+          return res.status(400).json({ message: err.message });
+        } else if (err) {
+          // Handle other errors (like file type validation)
+          return res.status(400).json({ message: err.message });
+        }
+      }
+      
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
       
       const fileUrl = `/uploads/${req.file.filename}`;
-      res.json({ url: fileUrl });
-    } catch (error: any) {
-      res.status(500).json({ message: error.message });
-    }
+      return res.json({ url: fileUrl });
+    });
   });
 
   const httpServer = createServer(app);
