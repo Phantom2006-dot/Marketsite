@@ -6,7 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, FormDescription } from "@/components/ui/form";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  FormDescription,
+} from "@/components/ui/form";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSiteSettingSchema, type SiteSetting } from "@shared/schema";
@@ -31,8 +39,10 @@ export default function AdminSettings() {
       whatsapp: "07016342022",
       telegram: "07016342022",
       facebook: "",
-      locationKontagora: "1st floor by LAPO office, Madengene plaza, Opposite Korna amala, Kontagora, Niger state.",
-      locationAbuja: "Opposite Zahra bread, Compensation lay out, Old kutunku, Gwagwalada FCT, Abuja.",
+      locationKontagora:
+        "1st floor by LAPO office, Madengene plaza, Opposite Korna amala, Kontagora, Niger state.",
+      locationAbuja:
+        "Opposite Zahra bread, Compensation lay out, Old kutunku, Gwagwalada FCT, Abuja.",
       heroImageUrl: "",
     },
   });
@@ -46,26 +56,32 @@ export default function AdminSettings() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
+      setSelectedFile(null);
+      setImagePreview(null);
       toast({ title: "Settings updated successfully" });
     },
     onError: (error: any) => {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     },
   });
 
   const uploadFile = async (file: File): Promise<string> => {
     const formData = new FormData();
-    formData.append('file', file);
-    
-    const response = await fetch('/api/upload', {
-      method: 'POST',
+    formData.append("file", file);
+
+    const response = await fetch("/api/upload", {
+      method: "POST",
       body: formData,
     });
-    
+
     if (!response.ok) {
-      throw new Error('Failed to upload file');
+      throw new Error("Failed to upload file");
     }
-    
+
     const result = await response.json();
     return result.url;
   };
@@ -73,18 +89,20 @@ export default function AdminSettings() {
   const handleSubmit = async (data: any) => {
     try {
       setIsUploading(true);
-      
+
       // If there's a selected file, upload it first
       if (selectedFile) {
         const imageUrl = await uploadFile(selectedFile);
         data.heroImageUrl = imageUrl;
       }
-      
+
       updateMutation.mutate(data);
-      setSelectedFile(null);
-      setImagePreview(null);
     } catch (error: any) {
-      toast({ title: "Error", description: error.message, variant: "destructive" });
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive",
+      });
     } finally {
       setIsUploading(false);
     }
@@ -102,9 +120,22 @@ export default function AdminSettings() {
     }
   };
 
-  const removeFile = () => {
+  const removeExistingHeroImage = () => {
+    form.setValue("heroImageUrl", "");
+    // Force immediate form submission to remove the hero image
+    form.handleSubmit(handleSubmit)();
+  };
+
+  const removeNewHeroImage = () => {
     setSelectedFile(null);
     setImagePreview(null);
+    // Clear the file input
+    const fileInput = document.querySelector(
+      'input[type="file"]',
+    ) as HTMLInputElement;
+    if (fileInput) {
+      fileInput.value = "";
+    }
   };
 
   return (
@@ -113,7 +144,10 @@ export default function AdminSettings() {
 
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" data-testid="text-settings-title">
+          <h1
+            className="text-3xl font-bold mb-2"
+            data-testid="text-settings-title"
+          >
             Store Settings
           </h1>
           <p className="text-muted-foreground">
@@ -133,7 +167,10 @@ export default function AdminSettings() {
             </Card>
           ) : (
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
+              <form
+                onSubmit={form.handleSubmit(handleSubmit)}
+                className="space-y-6"
+              >
                 <Card>
                   <CardHeader>
                     <CardTitle>Store Information</CardTitle>
@@ -146,7 +183,11 @@ export default function AdminSettings() {
                         <FormItem>
                           <FormLabel>Store Name</FormLabel>
                           <FormControl>
-                            <Input {...field} placeholder="AL-MUSLIMAH CLOTHINGS & SHOES" data-testid="input-store-name" />
+                            <Input
+                              {...field}
+                              placeholder="AL-MUSLIMAH CLOTHINGS & SHOES"
+                              data-testid="input-store-name"
+                            />
                           </FormControl>
                           <FormDescription>
                             This will appear on your storefront
@@ -157,58 +198,98 @@ export default function AdminSettings() {
                     />
 
                     <div className="space-y-4">
-                      <Label>Hero Background Image (optional)</Label>
-                      
-                      {(imagePreview || settings?.heroImageUrl) && !selectedFile && (
+                      <Label>Hero Background Image</Label>
+
+                      {/* Show existing hero image with remove option */}
+                      {settings?.heroImageUrl && !selectedFile && (
                         <div className="relative group">
                           <img
-                            src={imagePreview || settings?.heroImageUrl || ''}
-                            alt="Hero preview"
-                            className="w-full h-48 object-cover rounded-md"
+                            src={settings.heroImageUrl}
+                            alt="Current hero image"
+                            className="w-full h-48 object-cover rounded-md border"
                           />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <p className="text-white text-sm">
+                              Current Hero Image
+                            </p>
+                          </div>
                           <Button
                             type="button"
                             size="icon"
                             variant="destructive"
                             className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => form.setValue('heroImageUrl', '')}
+                            onClick={removeExistingHeroImage}
                             data-testid="button-remove-hero-image"
                           >
                             <X className="w-4 h-4" />
                           </Button>
                         </div>
                       )}
-                      
+
+                      {/* Show new image preview when a file is selected */}
                       {imagePreview && selectedFile && (
                         <div className="relative group">
                           <img
                             src={imagePreview}
                             alt="New hero preview"
-                            className="w-full h-48 object-cover rounded-md"
+                            className="w-full h-48 object-cover rounded-md border"
                           />
+                          <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+                            <p className="text-white text-sm">
+                              New Hero Image Preview
+                            </p>
+                          </div>
                           <Button
                             type="button"
                             size="icon"
                             variant="destructive"
                             className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={removeFile}
+                            onClick={removeNewHeroImage}
                             data-testid="button-remove-new-hero"
                           >
                             <X className="w-4 h-4" />
                           </Button>
                         </div>
                       )}
-                      
-                      <Input
-                        type="file"
-                        accept="image/*"
-                        onChange={handleFileSelect}
-                        className="cursor-pointer"
-                        data-testid="input-hero-image-file"
-                      />
-                      <p className="text-xs text-muted-foreground">
-                        Upload a background image for your homepage hero section (Max 5MB)
-                      </p>
+
+                      {/* File input */}
+                      <div className="border-2 border-dashed rounded-lg p-6 text-center">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                          id="hero-image-file"
+                          data-testid="input-hero-image-file"
+                        />
+                        <label
+                          htmlFor="hero-image-file"
+                          className="cursor-pointer block"
+                        >
+                          <div className="flex flex-col items-center gap-2">
+                            <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
+                              <span className="text-2xl">+</span>
+                            </div>
+                            <p className="text-sm font-medium">
+                              {settings?.heroImageUrl
+                                ? "Replace Hero Image"
+                                : "Upload Hero Image"}
+                            </p>
+                            <p className="text-xs text-muted-foreground">
+                              Click to upload a background image for your
+                              homepage (Max 5MB)
+                            </p>
+                          </div>
+                        </label>
+                      </div>
+
+                      {/* Show current hero image URL if exists */}
+                      {settings?.heroImageUrl && (
+                        <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
+                          <strong>Current Image:</strong>{" "}
+                          {settings.heroImageUrl}
+                        </div>
+                      )}
                     </div>
                   </CardContent>
                 </Card>
@@ -225,7 +306,12 @@ export default function AdminSettings() {
                         <FormItem>
                           <FormLabel>WhatsApp Number</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value ?? ''} placeholder="07016342022" data-testid="input-whatsapp" />
+                            <Input
+                              {...field}
+                              value={field.value ?? ""}
+                              placeholder="07016342022"
+                              data-testid="input-whatsapp"
+                            />
                           </FormControl>
                           <FormDescription>
                             Customers can contact you via WhatsApp
@@ -242,7 +328,12 @@ export default function AdminSettings() {
                         <FormItem>
                           <FormLabel>Telegram Number</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value ?? ''} placeholder="07016342022" data-testid="input-telegram" />
+                            <Input
+                              {...field}
+                              value={field.value ?? ""}
+                              placeholder="07016342022"
+                              data-testid="input-telegram"
+                            />
                           </FormControl>
                           <FormDescription>
                             Customers can contact you via Telegram
@@ -259,7 +350,12 @@ export default function AdminSettings() {
                         <FormItem>
                           <FormLabel>Facebook Page URL (optional)</FormLabel>
                           <FormControl>
-                            <Input {...field} value={field.value ?? ''} placeholder="https://facebook.com/yourpage" data-testid="input-facebook" />
+                            <Input
+                              {...field}
+                              value={field.value ?? ""}
+                              placeholder="https://facebook.com/yourpage"
+                              data-testid="input-facebook"
+                            />
                           </FormControl>
                           <FormDescription>
                             Link to your Facebook page
@@ -285,7 +381,7 @@ export default function AdminSettings() {
                           <FormControl>
                             <Textarea
                               {...field}
-                              value={field.value ?? ''}
+                              value={field.value ?? ""}
                               placeholder="1st floor by LAPO office, Madengene plaza..."
                               rows={3}
                               data-testid="input-location-kontagora"
@@ -308,7 +404,7 @@ export default function AdminSettings() {
                           <FormControl>
                             <Textarea
                               {...field}
-                              value={field.value ?? ''}
+                              value={field.value ?? ""}
                               placeholder="Opposite Zahra bread, Compensation lay out..."
                               rows={3}
                               data-testid="input-location-abuja"
@@ -324,13 +420,28 @@ export default function AdminSettings() {
                   </CardContent>
                 </Card>
 
-                <div className="flex justify-end">
+                <div className="flex justify-end gap-4">
+                  {(selectedFile || form.formState.isDirty) && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setSelectedFile(null);
+                        setImagePreview(null);
+                        form.reset();
+                      }}
+                    >
+                      Cancel
+                    </Button>
+                  )}
                   <Button
                     type="submit"
-                    disabled={updateMutation.isPending}
+                    disabled={updateMutation.isPending || isUploading}
                     data-testid="button-save"
                   >
-                    {updateMutation.isPending ? "Saving..." : "Save Settings"}
+                    {updateMutation.isPending || isUploading
+                      ? "Saving..."
+                      : "Save Settings"}
                   </Button>
                 </div>
               </form>
