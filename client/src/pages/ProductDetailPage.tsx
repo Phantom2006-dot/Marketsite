@@ -1,55 +1,100 @@
 import { useRoute, Link } from "wouter";
+import { useQuery } from "@tanstack/react-query";
 import Navbar from "@/components/Navbar";
-import ProductGallery from "@/components/ProductGallery";
+import ImageCarousel from "@/components/ImageCarousel";
 import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, MessageCircle } from "lucide-react";
-import speakerImg from '@assets/generated_images/Bluetooth_speaker_product_af6fba9e.png'
-import mugImg from '@assets/generated_images/Coffee_mug_product_685a7c25.png'
-import sunglassesImg from '@assets/generated_images/Sunglasses_product_dda4545a.png'
+import type { Product, Category, ProductImage } from "@shared/schema";
 
 export default function ProductDetailPage() {
   const [, params] = useRoute("/product/:slug");
   const slug = params?.slug || "";
 
-  const categories = [
-    { name: "Electronics", slug: "electronics" },
-    { name: "Fashion", slug: "fashion" },
-    { name: "Home & Living", slug: "home-living" },
-  ];
+  const { data: categories } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
 
-  const product = {
-    id: 1,
-    name: "Wireless Bluetooth Speaker",
-    price: 89.99,
-    description: "Experience premium sound quality with our wireless Bluetooth speaker. Featuring advanced audio technology, 12-hour battery life, and waterproof design. Perfect for outdoor adventures or home entertainment. Connect seamlessly to any device and enjoy your favorite music anywhere.",
-    images: [speakerImg, mugImg, sunglassesImg],
-    category: "Electronics",
-    categorySlug: "electronics",
-    size: "Compact (6 x 3 x 3 inches)",
-    weight: "450g",
-    quantity: 15,
-  };
+  const { data: product, isLoading: productLoading } = useQuery<Product>({
+    queryKey: [`/api/products/slug/${slug}`],
+    enabled: !!slug,
+  });
+
+  const { data: productImages } = useQuery<ProductImage[]>({
+    queryKey: [`/api/products/${product?.id}/images`],
+    enabled: !!product?.id,
+  });
+
+  const { data: category } = useQuery<Category>({
+    queryKey: [`/api/categories/${product?.categoryId}`],
+    enabled: !!product?.categoryId,
+  });
+
+  const { data: settings } = useQuery({
+    queryKey: ["/api/settings"],
+  });
+
+  const whatsappNumber = settings?.whatsapp || "07016342022";
+
+  if (productLoading) {
+    return (
+      <div className="min-h-screen">
+        <Navbar categories={categories || []} />
+        <div className="flex items-center justify-center h-96">
+          <p className="text-muted-foreground">Loading product...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!product) {
+    return (
+      <div className="min-h-screen">
+        <Navbar categories={categories || []} />
+        <div className="flex items-center justify-center h-96">
+          <p className="text-muted-foreground">Product not found</p>
+        </div>
+      </div>
+    );
+  }
+
+  const images = productImages?.map(img => img.url) || [];
 
   return (
     <div className="min-h-screen">
-      <Navbar categories={categories} />
+      <Navbar categories={categories || []} />
 
       <div className="py-8 px-4">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center gap-2 text-muted-foreground text-sm mb-8">
             <Link href="/" className="hover:text-foreground">Home</Link>
             <ChevronRight className="h-4 w-4" />
-            <Link href={`/category/${product.categorySlug}`} className="hover:text-foreground">
-              {product.category}
-            </Link>
-            <ChevronRight className="h-4 w-4" />
+            {category && (
+              <>
+                <Link href={`/category/${category.slug}`} className="hover:text-foreground">
+                  {category.name}
+                </Link>
+                <ChevronRight className="h-4 w-4" />
+              </>
+            )}
             <span data-testid="text-breadcrumb-product">{product.name}</span>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-5 gap-12">
             <div className="lg:col-span-3">
-              <ProductGallery images={product.images} productName={product.name} />
+              {images.length > 0 ? (
+                <ImageCarousel
+                  images={images}
+                  aspectRatio="aspect-[3/4]"
+                  showControls={images.length > 1}
+                  autoPlay={images.length > 1}
+                  interval={8000}
+                />
+              ) : (
+                <div className="aspect-[3/4] bg-muted flex items-center justify-center rounded-lg">
+                  <p className="text-muted-foreground">No images available</p>
+                </div>
+              )}
             </div>
 
             <div className="lg:col-span-2 space-y-6">
@@ -58,15 +103,17 @@ export default function ProductDetailPage() {
                   {product.name}
                 </h1>
                 <p className="text-4xl font-bold text-primary" data-testid="text-product-price">
-                  ${product.price.toFixed(2)}
+                  ₦{product.price.toFixed(2)}
                 </p>
               </div>
 
-              <div className="border-t border-b py-6 space-y-4">
-                <p className="text-foreground leading-relaxed" data-testid="text-product-description">
-                  {product.description}
-                </p>
-              </div>
+              {product.description && (
+                <div className="border-t border-b py-6 space-y-4">
+                  <p className="text-foreground leading-relaxed" data-testid="text-product-description">
+                    {product.description}
+                  </p>
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4 text-sm">
                 {product.size && (
@@ -81,7 +128,7 @@ export default function ProductDetailPage() {
                     <p className="font-medium" data-testid="text-product-weight">{product.weight}</p>
                   </div>
                 )}
-                {product.quantity !== undefined && (
+                {product.quantity !== undefined && product.quantity !== null && (
                   <div>
                     <p className="text-muted-foreground mb-1">In Stock</p>
                     <p className="font-medium" data-testid="text-product-quantity">{product.quantity} units</p>
@@ -91,7 +138,7 @@ export default function ProductDetailPage() {
 
               <Button 
                 className="w-full bg-[#25D366] hover:bg-[#20BA59] text-white text-lg py-6"
-                onClick={() => window.open('https://wa.me/2348012345678', '_blank')}
+                onClick={() => window.open(`https://wa.me/${whatsappNumber.replace(/[^0-9]/g, '')}`, '_blank')}
                 data-testid="button-contact-seller"
               >
                 <MessageCircle className="mr-2 h-5 w-5" />
@@ -106,7 +153,7 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      <WhatsAppButton phoneNumber="+2348012345678" />
+      <WhatsAppButton />
     </div>
   );
 }

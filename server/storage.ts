@@ -5,17 +5,23 @@ import {
   type InsertUser,
   type Category,
   type InsertCategory,
+  type CategoryImage,
+  type InsertCategoryImage,
   type Product,
   type InsertProduct,
   type ProductImage,
   type InsertProductImage,
   type SiteSetting,
   type InsertSiteSetting,
+  type HeroImage,
+  type InsertHeroImage,
   users,
   categories,
+  categoryImages,
   products,
   productImages,
   siteSettings,
+  heroImages,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -32,6 +38,11 @@ export interface IStorage {
   updateCategory(id: number, category: Partial<InsertCategory>): Promise<Category | undefined>;
   deleteCategory(id: number): Promise<boolean>;
 
+  // Category image operations
+  getCategoryImages(categoryId: number): Promise<CategoryImage[]>;
+  createCategoryImage(image: InsertCategoryImage): Promise<CategoryImage>;
+  deleteCategoryImage(id: number): Promise<boolean>;
+
   // Product operations
   getProducts(): Promise<Product[]>;
   getProduct(id: number): Promise<Product | undefined>;
@@ -45,6 +56,11 @@ export interface IStorage {
   getProductImages(productId: number): Promise<ProductImage[]>;
   createProductImage(image: InsertProductImage): Promise<ProductImage>;
   deleteProductImage(id: number): Promise<boolean>;
+
+  // Hero image operations
+  getHeroImages(): Promise<HeroImage[]>;
+  createHeroImage(image: InsertHeroImage): Promise<HeroImage>;
+  deleteHeroImage(id: number): Promise<boolean>;
 
   // Site settings operations
   getSiteSettings(): Promise<SiteSetting | undefined>;
@@ -102,6 +118,21 @@ export class DatabaseStorage implements IStorage {
     return result.length > 0;
   }
 
+  // Category image operations
+  async getCategoryImages(categoryId: number): Promise<CategoryImage[]> {
+    return db.select().from(categoryImages).where(eq(categoryImages.categoryId, categoryId)).orderBy(categoryImages.order);
+  }
+
+  async createCategoryImage(image: InsertCategoryImage): Promise<CategoryImage> {
+    const result = await db.insert(categoryImages).values(image).returning();
+    return result[0];
+  }
+
+  async deleteCategoryImage(id: number): Promise<boolean> {
+    const result = await db.delete(categoryImages).where(eq(categoryImages.id, id)).returning();
+    return result.length > 0;
+  }
+
   // Product operations
   async getProducts(): Promise<Product[]> {
     return db.select().from(products).orderBy(desc(products.createdAt));
@@ -142,7 +173,7 @@ export class DatabaseStorage implements IStorage {
 
   // Product image operations
   async getProductImages(productId: number): Promise<ProductImage[]> {
-    return db.select().from(productImages).where(eq(productImages.productId, productId));
+    return db.select().from(productImages).where(eq(productImages.productId, productId)).orderBy(productImages.order);
   }
 
   async createProductImage(image: InsertProductImage): Promise<ProductImage> {
@@ -152,6 +183,21 @@ export class DatabaseStorage implements IStorage {
 
   async deleteProductImage(id: number): Promise<boolean> {
     const result = await db.delete(productImages).where(eq(productImages.id, id)).returning();
+    return result.length > 0;
+  }
+
+  // Hero image operations
+  async getHeroImages(): Promise<HeroImage[]> {
+    return db.select().from(heroImages).orderBy(heroImages.order);
+  }
+
+  async createHeroImage(image: InsertHeroImage): Promise<HeroImage> {
+    const result = await db.insert(heroImages).values(image).returning();
+    return result[0];
+  }
+
+  async deleteHeroImage(id: number): Promise<boolean> {
+    const result = await db.delete(heroImages).where(eq(heroImages.id, id)).returning();
     return result.length > 0;
   }
 

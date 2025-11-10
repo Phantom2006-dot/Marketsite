@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Facebook, Send } from "lucide-react";
-import type { Category, Product, SiteSetting } from "@shared/schema";
+import ImageCarousel from "@/components/ImageCarousel";
+import type { Category, Product, SiteSetting, HeroImage } from "@shared/schema";
 
 export default function HomePage() {
   const { data: settings, isLoading: settingsLoading } = useQuery<SiteSetting>({
@@ -21,21 +22,32 @@ export default function HomePage() {
     queryKey: ["/api/products"],
   });
 
+  const { data: heroImages } = useQuery<HeroImage[]>({
+    queryKey: ["/api/hero-images"],
+  });
+
   const storeName = settings?.storeName || "AL-MUSLIMAH CLOTHINGS & SHOES";
-  const heroImage = settings?.heroImageUrl || "https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop";
+  const fallbackHeroImage = settings?.heroImageUrl || "https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop";
+  
+  const heroImageUrls = heroImages && heroImages.length > 0 
+    ? heroImages.map(img => img.url)
+    : [fallbackHeroImage];
 
   return (
     <div className="min-h-screen flex flex-col">
       <CustomerNav />
 
       <main className="flex-1">
-        <section
-          className="relative h-[300px] md:h-[400px] bg-cover bg-center flex items-center justify-center"
-          style={{
-            backgroundImage: `linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url(${heroImage})`,
-          }}
-        >
-          <div className="text-center text-white px-4">
+        <section className="relative h-[300px] md:h-[400px] flex items-center justify-center overflow-hidden">
+          <ImageCarousel
+            images={heroImageUrls}
+            aspectRatio="h-[300px] md:h-[400px]"
+            className="absolute inset-0"
+            showControls={heroImageUrls.length > 1}
+            autoPlay={heroImageUrls.length > 1}
+          />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/60" />
+          <div className="relative z-10 text-center text-white px-4">
             <h1 className="text-3xl md:text-5xl font-bold mb-4" data-testid="text-hero-title">{storeName}</h1>
             <p className="text-lg md:text-xl mb-6">Quality Islamic Clothing & Accessories for Women</p>
             <div className="flex flex-wrap gap-4 justify-center">

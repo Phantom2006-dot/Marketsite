@@ -1,7 +1,7 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCategorySchema, insertProductSchema, insertProductImageSchema, insertSiteSettingSchema } from "@shared/schema";
+import { insertCategorySchema, insertCategoryImageSchema, insertProductSchema, insertProductImageSchema, insertHeroImageSchema, insertSiteSettingSchema } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Category routes
@@ -56,6 +56,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const deleted = await storage.deleteCategory(id);
       if (!deleted) {
         return res.status(404).json({ message: "Category not found" });
+      }
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.get("/api/categories/slug/:slug", async (req, res) => {
+    try {
+      const slug = req.params.slug;
+      const category = await storage.getCategoryBySlug(slug);
+      if (!category) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+      res.json(category);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Category image routes
+  app.get("/api/categories/:categoryId/images", async (req, res) => {
+    try {
+      const categoryId = parseInt(req.params.categoryId);
+      const images = await storage.getCategoryImages(categoryId);
+      res.json(images);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/categories/:categoryId/images", async (req, res) => {
+    try {
+      const categoryId = parseInt(req.params.categoryId);
+      const validatedData = insertCategoryImageSchema.parse({
+        ...req.body,
+        categoryId,
+      });
+      const image = await storage.createCategoryImage(validatedData);
+      res.status(201).json(image);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/category-images/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteCategoryImage(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Image not found" });
       }
       res.json({ success: true });
     } catch (error: any) {
@@ -132,6 +183,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  app.get("/api/products/slug/:slug", async (req, res) => {
+    try {
+      const slug = req.params.slug;
+      const product = await storage.getProductBySlug(slug);
+      if (!product) {
+        return res.status(404).json({ message: "Product not found" });
+      }
+      res.json(product);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
   // Product image routes
   app.get("/api/products/:productId/images", async (req, res) => {
     try {
@@ -161,6 +225,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const deleted = await storage.deleteProductImage(id);
+      if (!deleted) {
+        return res.status(404).json({ message: "Image not found" });
+      }
+      res.json({ success: true });
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  // Hero image routes
+  app.get("/api/hero-images", async (_req, res) => {
+    try {
+      const images = await storage.getHeroImages();
+      res.json(images);
+    } catch (error: any) {
+      res.status(500).json({ message: error.message });
+    }
+  });
+
+  app.post("/api/hero-images", async (req, res) => {
+    try {
+      const validatedData = insertHeroImageSchema.parse(req.body);
+      const image = await storage.createHeroImage(validatedData);
+      res.status(201).json(image);
+    } catch (error: any) {
+      res.status(400).json({ message: error.message });
+    }
+  });
+
+  app.delete("/api/hero-images/:id", async (req, res) => {
+    try {
+      const id = parseInt(req.params.id);
+      const deleted = await storage.deleteHeroImage(id);
       if (!deleted) {
         return res.status(404).json({ message: "Image not found" });
       }
