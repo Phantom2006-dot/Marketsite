@@ -19,8 +19,10 @@ import { useToast } from "@/hooks/use-toast";
 export default function AdminCategories() {
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [imageUrls, setImageUrls] = useState<string[]>([""]);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [existingImages, setExistingImages] = useState<CategoryImage[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
   const { toast } = useToast();
 
   const { data: categories, isLoading } = useQuery<Category[]>({
@@ -70,8 +72,26 @@ export default function AdminCategories() {
     },
   });
 
+  const uploadFile = async (file: File): Promise<string> => {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    const response = await fetch('/api/upload', {
+      method: 'POST',
+      body: formData,
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to upload file');
+    }
+    
+    const data = await response.json();
+    return data.url;
+  };
+
   const handleSubmit = async (data: any) => {
     try {
+      setIsUploading(true);
       let categoryId: number;
       
       if (editingCategory) {
@@ -82,12 +102,12 @@ export default function AdminCategories() {
         categoryId = result.id;
       }
       
-      // Save new images
-      const validImageUrls = imageUrls.filter(url => url.trim());
-      for (let i = 0; i < validImageUrls.length; i++) {
+      // Upload and save new images
+      for (let i = 0; i < selectedFiles.length; i++) {
+        const imageUrl = await uploadFile(selectedFiles[i]);
         await apiRequest(`/api/categories/${categoryId}/images`, {
           method: "POST",
-          body: JSON.stringify({ url: validImageUrls[i], order: i }),
+          body: JSON.stringify({ url: imageUrl, order: i }),
         });
       }
       
@@ -96,10 +116,13 @@ export default function AdminCategories() {
       setIsDialogOpen(false);
       setEditingCategory(null);
       form.reset();
-      setImageUrls([""]);
+      setSelectedFiles([]);
+      setImagePreviews([]);
       setExistingImages([]);
     } catch (error: any) {
       toast({ title: "Error", description: error.message, variant: "destructive" });
+    } finally {
+      setIsUploading(false);
     }
   };
 
@@ -116,10 +139,12 @@ export default function AdminCategories() {
     try {
       const images = await apiRequest(`/api/categories/${category.id}/images`);
       setExistingImages(images);
-      setImageUrls([""]);
+      setSelectedFiles([]);
+      setImagePreviews([]);
     } catch (error) {
       setExistingImages([]);
-      setImageUrls([""]);
+      setSelectedFiles([]);
+      setImagePreviews([]);
     }
     
     setIsDialogOpen(true);
@@ -136,18 +161,23 @@ export default function AdminCategories() {
     }
   };
   
-  const addImageUrl = () => {
-    setImageUrls([...imageUrls, ""]);
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    setSelectedFiles([...selectedFiles, ...files]);
+    
+    // Create previews
+    files.forEach(file => {
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreviews(prev => [...prev, reader.result as string]);
+      };
+      reader.readAsDataURL(file);
+    });
   };
   
-  const removeImageUrl = (index: number) => {
-    setImageUrls(imageUrls.filter((_, i) => i !== index));
-  };
-  
-  const updateImageUrl = (index: number, value: string) => {
-    const newUrls = [...imageUrls];
-    newUrls[index] = value;
-    setImageUrls(newUrls);
+  const removeFile = (index: number) => {
+    setSelectedFiles(selectedFiles.filter((_, i) => i !== index));
+    setImagePreviews(imagePreviews.filter((_, i) => i !== index));
   };
 
   const handleDelete = (id: number) => {
@@ -176,7 +206,8 @@ export default function AdminCategories() {
             if (!open) {
               setEditingCategory(null);
               form.reset();
-              setImageUrls([""]);
+              setSelectedFiles([]);
+              setImagePreviews([]);
               setExistingImages([]);
             }
           }}>
@@ -251,14 +282,19 @@ export default function AdminCategories() {
                     {existingImages.length > 0 && (
                       <div className="space-y-2">
                         <p className="text-sm text-muted-foreground">Existing Images</p>
-                        <div className="space-y-2">
+                        <div className="grid grid-cols-2 gap-2">
                           {existingImages.map((image) => (
-                            <div key={image.id} className="flex items-center gap-2">
-                              <Input value={image.url} disabled className="flex-1" />
+                            <div key={image.id} className="relative group">
+                              <img
+                                src={image.url}
+                                alt="Category"
+                                className="w-full h-32 object-cover rounded-md"
+                              />
                               <Button
                                 type="button"
                                 size="icon"
-                                variant="ghost"
+                                variant="destructive"
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
                                 onClick={() => handleDeleteExistingImage(image.id)}
                                 data-testid={`button-delete-image-${image.id}`}
                               >
@@ -272,37 +308,44 @@ export default function AdminCategories() {
 
                     <div className="space-y-2">
                       <p className="text-sm text-muted-foreground">Add New Images</p>
-                      {imageUrls.map((url, index) => (
-                        <div key={index} className="flex items-center gap-2">
-                          <Input
-                            value={url}
-                            onChange={(e) => updateImageUrl(index, e.target.value)}
-                            placeholder="https://example.com/image.jpg"
-                            data-testid={`input-image-url-${index}`}
-                          />
-                          {imageUrls.length > 1 && (
-                            <Button
-                              type="button"
-                              size="icon"
-                              variant="ghost"
-                              onClick={() => removeImageUrl(index)}
-                              data-testid={`button-remove-image-${index}`}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          )}
+                      
+                      {imagePreviews.length > 0 && (
+                        <div className="grid grid-cols-2 gap-2 mb-4">
+                          {imagePreviews.map((preview, index) => (
+                            <div key={index} className="relative group">
+                              <img
+                                src={preview}
+                                alt={`Preview ${index + 1}`}
+                                className="w-full h-32 object-cover rounded-md"
+                              />
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="destructive"
+                                className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity"
+                                onClick={() => removeFile(index)}
+                                data-testid={`button-remove-file-${index}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                      <Button
-                        type="button"
-                        variant="outline"
-                        size="sm"
-                        onClick={addImageUrl}
-                        data-testid="button-add-image-url"
-                      >
-                        <Plus className="w-4 h-4 mr-2" />
-                        Add Another Image
-                      </Button>
+                      )}
+                      
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={handleFileSelect}
+                          className="cursor-pointer"
+                          data-testid="input-image-file"
+                        />
+                      </div>
+                      <p className="text-xs text-muted-foreground">
+                        Select multiple images (Max 5MB per file)
+                      </p>
                     </div>
                   </div>
 
@@ -340,10 +383,12 @@ export default function AdminCategories() {
                     </Button>
                     <Button
                       type="submit"
-                      disabled={createMutation.isPending || updateMutation.isPending}
+                      disabled={createMutation.isPending || updateMutation.isPending || isUploading}
                       data-testid="button-submit"
                     >
-                      {createMutation.isPending || updateMutation.isPending
+                      {isUploading
+                        ? "Uploading images..."
+                        : createMutation.isPending || updateMutation.isPending
                         ? "Saving..."
                         : editingCategory
                         ? "Update Category"

@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, LayoutDashboard, Package, FolderTree, Settings, ArrowLeft } from "lucide-react";
+import { Menu, X, LayoutDashboard, Package, FolderTree, Settings, ArrowLeft, LogOut } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useQuery } from "@tanstack/react-query";
@@ -72,6 +72,16 @@ export function AdminNav() {
                 </Link>
               );
             })}
+            <Link href="/">
+              <Button
+                variant="outline"
+                className="gap-2"
+                data-testid="button-return-site"
+              >
+                <LogOut className="w-4 h-4" />
+                Return to Site
+              </Button>
+            </Link>
             <ThemeToggle />
           </div>
 
@@ -112,6 +122,17 @@ export function AdminNav() {
                   </Link>
                 );
               })}
+              <Link href="/">
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                  data-testid="button-mobile-return-site"
+                >
+                  <LogOut className="w-4 h-4" />
+                  Return to Site
+                </Button>
+              </Link>
             </div>
           </div>
         )}
