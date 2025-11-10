@@ -1,91 +1,158 @@
-import AdminLayout from "@/components/AdminLayout";
+import { useQuery } from "@tanstack/react-query";
+import { Link } from "wouter";
+import { AdminNav } from "@/components/AdminNav";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Package, FolderOpen, DollarSign, TrendingUp } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Package, FolderOpen, ShoppingBag } from "lucide-react";
+import type { Product, Category } from "@shared/schema";
 
 export default function AdminDashboard() {
-  const stats = [
-    { name: "Total Products", value: "42", icon: Package, change: "+12%" },
-    { name: "Categories", value: "8", icon: FolderOpen, change: "+2" },
-    { name: "Total Revenue", value: "$12,450", icon: DollarSign, change: "+23%" },
-    { name: "Growth", value: "18.2%", icon: TrendingUp, change: "+4.3%" },
-  ];
+  const { data: products } = useQuery<Product[]>({
+    queryKey: ["/api/products"],
+  });
+
+  const { data: categories } = useQuery<Category[]>({
+    queryKey: ["/api/categories"],
+  });
+
+  const productCount = products?.length || 0;
+  const categoryCount = categories?.length || 0;
 
   return (
-    <AdminLayout>
-      <div className="p-8">
+    <div className="min-h-screen flex flex-col">
+      <AdminNav />
+
+      <main className="flex-1 container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="font-['DM_Sans'] font-bold text-3xl mb-2" data-testid="text-dashboard-title">
+          <h1 className="text-3xl font-bold mb-2" data-testid="text-dashboard-title">
             Dashboard
           </h1>
           <p className="text-muted-foreground">
-            Overview of your marketplace performance
+            Manage your e-commerce store
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-          {stats.map((stat) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={stat.name}>
-                <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">
-                    {stat.name}
-                  </CardTitle>
-                  <Icon className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold" data-testid={`stat-${stat.name.toLowerCase().replace(/\s+/g, '-')}`}>
-                    {stat.value}
-                  </div>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    {stat.change} from last month
-                  </p>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Total Products
+              </CardTitle>
+              <Package className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold" data-testid="stat-total-products">
+                {productCount}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Categories
+              </CardTitle>
+              <FolderOpen className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold" data-testid="stat-categories">
+                {categoryCount}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between gap-2 space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Store Status
+              </CardTitle>
+              <ShoppingBag className="w-4 h-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold" data-testid="stat-store-status">
+                Active
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <Card>
             <CardHeader>
-              <CardTitle>Recent Activity</CardTitle>
+              <CardTitle>Quick Actions</CardTitle>
             </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {[1, 2, 3].map((i) => (
-                  <div key={i} className="flex items-center gap-4 py-2 border-b last:border-0">
-                    <div className="flex-1">
-                      <p className="font-medium">Product updated</p>
-                      <p className="text-sm text-muted-foreground">Wireless Speaker - 2 hours ago</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
+            <CardContent className="space-y-2">
+              <Link href="/dashboard/products">
+                <div className="p-4 border rounded-md hover-elevate cursor-pointer">
+                  <p className="font-medium">Manage Products</p>
+                  <p className="text-sm text-muted-foreground">Add, edit, or remove products</p>
+                </div>
+              </Link>
+              <Link href="/dashboard/categories">
+                <div className="p-4 border rounded-md hover-elevate cursor-pointer">
+                  <p className="font-medium">Manage Categories</p>
+                  <p className="text-sm text-muted-foreground">Organize your product categories</p>
+                </div>
+              </Link>
+              <Link href="/dashboard/settings">
+                <div className="p-4 border rounded-md hover-elevate cursor-pointer">
+                  <p className="font-medium">Store Settings</p>
+                  <p className="text-sm text-muted-foreground">Update contact info and preferences</p>
+                </div>
+              </Link>
             </CardContent>
           </Card>
 
           <Card>
             <CardHeader>
-              <CardTitle>Quick Actions</CardTitle>
+              <CardTitle>Recent Products</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <div className="p-4 border rounded-lg hover-elevate cursor-pointer">
-                <p className="font-medium">Add New Product</p>
-                <p className="text-sm text-muted-foreground">Create a new product listing</p>
-              </div>
-              <div className="p-4 border rounded-lg hover-elevate cursor-pointer">
-                <p className="font-medium">Manage Categories</p>
-                <p className="text-sm text-muted-foreground">Organize your product categories</p>
-              </div>
-              <div className="p-4 border rounded-lg hover-elevate cursor-pointer">
-                <p className="font-medium">Update Settings</p>
-                <p className="text-sm text-muted-foreground">Configure store settings</p>
+            <CardContent>
+              {products && products.length > 0 ? (
+                <div className="space-y-4">
+                  {products.slice(0, 5).map((product) => (
+                    <div key={product.id} className="flex items-center gap-4 py-2 border-b last:border-0">
+                      <div className="flex-1">
+                        <p className="font-medium">{product.name}</p>
+                        <p className="text-sm text-muted-foreground">₦{product.price.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-sm text-muted-foreground">No products yet</p>
+              )}
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="mt-8">
+          <Card>
+            <CardHeader>
+              <CardTitle>Getting Started</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                Welcome to your admin panel! Here's how to get started:
+              </p>
+              <ol className="list-decimal list-inside space-y-2 text-sm">
+                <li>Create categories to organize your products</li>
+                <li>Add products with images and details</li>
+                <li>Update store settings with contact information</li>
+                <li>Share your storefront with customers</li>
+              </ol>
+              <div className="flex gap-4">
+                <Link href="/dashboard/categories">
+                  <Button data-testid="button-get-started">Get Started</Button>
+                </Link>
+                <Link href="/">
+                  <Button variant="outline" data-testid="button-view-store">View Storefront</Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
         </div>
-      </div>
-    </AdminLayout>
+      </main>
+    </div>
   );
 }
