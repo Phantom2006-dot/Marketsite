@@ -10,16 +10,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
-import { Plus, Edit, Trash2 } from "lucide-react";
+import { Plus, Edit, Trash2, X } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { insertProductSchema, type Product, type Category } from "@shared/schema";
+import { insertProductSchema, type Product, type Category, type ProductImage } from "@shared/schema";
 import { queryClient, apiRequest } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 
 export default function AdminProducts() {
   const [editingProduct, setEditingProduct] = useState<Product | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [imageUrls, setImageUrls] = useState<string[]>([""]);
+  const [existingImages, setExistingImages] = useState<ProductImage[]>([]);
   const { toast } = useToast();
 
   const { data: products, isLoading } = useQuery<Product[]>({
@@ -98,15 +100,36 @@ export default function AdminProducts() {
     },
   });
 
-  const handleSubmit = (data: any) => {
-    if (editingProduct) {
-      updateMutation.mutate({ id: editingProduct.id, data });
-    } else {
-      createMutation.mutate(data);
+  const handleSubmit = async (data: any) => {
+    try {
+      let productId: number;
+      
+      if (editingProduct) {
+        const result = await updateMutation.mutateAsync({ id: editingProduct.id, data });
+        productId = editingProduct.id;
+      } else {
+        const result = await createMutation.mutateAsync(data);
+        productId = result.id;
+      }
+      
+      // Save new images
+      const validImageUrls = imageUrls.filter(url => url.trim());
+      for (let i = 0; i < validImageUrls.length; i++) {
+        await apiRequest(`/api/products/${productId}/images`, {
+          method: "POST",
+          body: JSON.stringify({ url: validImageUrls[i], order: i }),
+        });
+      }
+      
+      queryClient.invalidateQueries({ queryKey: ["/api/products"] });
+      setImageUrls([""]);
+      setExistingImages([]);
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
     }
   };
 
-  const handleEdit = (product: Product) => {
+  const handleEdit = async (product: Product) => {
     setEditingProduct(product);
     form.reset({
       name: product.name,
@@ -118,7 +141,42 @@ export default function AdminProducts() {
       quantity: product.quantity || 0,
       categoryId: product.categoryId,
     });
+    
+    // Fetch existing images
+    try {
+      const images = await apiRequest(`/api/products/${product.id}/images`);
+      setExistingImages(images);
+      setImageUrls([""]);
+    } catch (error) {
+      setExistingImages([]);
+      setImageUrls([""]);
+    }
+    
     setIsDialogOpen(true);
+  };
+  
+  const handleDeleteExistingImage = async (imageId: number) => {
+    try {
+      await apiRequest(`/api/product-images/${imageId}`, { method: "DELETE" });
+      setExistingImages(existingImages.filter(img => img.id !== imageId));
+      toast({ title: "Image deleted successfully" });
+    } catch (error: any) {
+      toast({ title: "Error", description: error.message, variant: "destructive" });
+    }
+  };
+  
+  const addImageUrl = () => {
+    setImageUrls([...imageUrls, ""]);
+  };
+  
+  const removeImageUrl = (index: number) => {
+    setImageUrls(imageUrls.filter((_, i) => i !== index));
+  };
+  
+  const updateImageUrl = (index: number, value: string) => {
+    const newUrls = [...imageUrls];
+    newUrls[index] = value;
+    setImageUrls(newUrls);
   };
 
   const handleDelete = (id: number) => {
@@ -147,6 +205,8 @@ export default function AdminProducts() {
             if (!open) {
               setEditingProduct(null);
               form.reset();
+              setImageUrls([""]);
+              setExistingImages([]);
             }
           }}>
             <DialogTrigger asChild>
@@ -312,6 +372,67 @@ export default function AdminProducts() {
                       </FormItem>
                     )}
                   />
+
+                  <div className="space-y-4">
+                    <Label>Product Images</Label>
+                    
+                    {existingImages.length > 0 && (
+                      <div className="space-y-2">
+                        <p className="text-sm text-muted-foreground">Existing Images</p>
+                        <div className="space-y-2">
+                          {existingImages.map((image) => (
+                            <div key={image.id} className="flex items-center gap-2">
+                              <Input value={image.url} disabled className="flex-1" />
+                              <Button
+                                type="button"
+                                size="icon"
+                                variant="ghost"
+                                onClick={() => handleDeleteExistingImage(image.id)}
+                                data-testid={`button-delete-image-${image.id}`}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="space-y-2">
+                      <p className="text-sm text-muted-foreground">Add New Images</p>
+                      {imageUrls.map((url, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input
+                            value={url}
+                            onChange={(e) => updateImageUrl(index, e.target.value)}
+                            placeholder="https://example.com/image.jpg"
+                            data-testid={`input-image-url-${index}`}
+                          />
+                          {imageUrls.length > 1 && (
+                            <Button
+                              type="button"
+                              size="icon"
+                              variant="ghost"
+                              onClick={() => removeImageUrl(index)}
+                              data-testid={`button-remove-image-${index}`}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={addImageUrl}
+                        data-testid="button-add-image-url"
+                      >
+                        <Plus className="w-4 h-4 mr-2" />
+                        Add Another Image
+                      </Button>
+                    </div>
+                  </div>
 
                   <div className="flex justify-end gap-2">
                     <Button
