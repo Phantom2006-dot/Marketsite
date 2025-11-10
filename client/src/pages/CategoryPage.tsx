@@ -30,10 +30,12 @@ export default function CategoryPage() {
     enabled: !!category?.id,
   });
 
-  const { data: allProductImages } = useQuery<{[key: number]: ProductImage[]}>({
-    queryKey: ["/api/all-product-images"],
+  const productIds = products?.map(p => p.id) || [];
+  
+  const productImageQueries = useQuery<{[key: number]: ProductImage[]}>({
+    queryKey: ['/api/product-images', 'category', category?.id, productIds],
     queryFn: async () => {
-      if (!products) return {};
+      if (!products || products.length === 0) return {};
       const imagePromises = products.map(p => 
         fetch(`/api/products/${p.id}/images`).then(r => r.json())
       );
@@ -44,8 +46,10 @@ export default function CategoryPage() {
       });
       return imagesMap;
     },
-    enabled: !!products && products.length > 0,
+    enabled: !!products && products.length > 0 && !!category?.id,
   });
+
+  const allProductImages = productImageQueries.data;
 
   if (categoryLoading) {
     return (
