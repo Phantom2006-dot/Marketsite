@@ -1,7 +1,7 @@
 import { useRoute, Link } from "wouter";
 import Navbar from "@/components/Navbar";
 import ProductGallery from "@/components/ProductGallery";
-import WhatsAppButton from "@/components/WhatsAppButton";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { Button } from "@/components/ui/button";
 import { ChevronRight, MessageCircle } from "lucide-react";
 import speakerImg from '@assets/generated_images/Bluetooth_speaker_product_af6fba9e.png'

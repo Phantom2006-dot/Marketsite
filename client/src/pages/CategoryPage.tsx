@@ -1,7 +1,7 @@
 import { useRoute } from "wouter";
 import Navbar from "@/components/Navbar";
 import ProductCard from "@/components/ProductCard";
-import WhatsAppButton from "@/components/WhatsAppButton";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 import { ChevronRight } from "lucide-react";
 import { Link } from "wouter";
 import electronicsImg from '@assets/generated_images/Electronics_category_image_da2a1661.png'
