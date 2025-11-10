@@ -3,6 +3,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { ThemeProvider } from "@/components/ThemeProvider";
 import HomePage from "@/pages/HomePage";
 import CategoryPage from "@/pages/CategoryPage";
 import ProductDetailPage from "@/pages/ProductDetailPage";
@@ -12,6 +13,7 @@ import AdminProducts from "@/pages/AdminProducts";
 import AdminCategories from "@/pages/AdminCategories";
 import AdminSettings from "@/pages/AdminSettings";
 import NotFound from "@/pages/not-found";
+import { WhatsAppButton } from "@/components/WhatsAppButton";
 
 function Router() {
   return (
@@ -32,10 +34,13 @@ function Router() {
 function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <Toaster />
-        <Router />
-      </TooltipProvider>
+      <ThemeProvider>
+        <TooltipProvider>
+          <Toaster />
+          <Router />
+          <WhatsAppButton />
+        </TooltipProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

@@ -1,25 +1,27 @@
 import { MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useQuery } from "@tanstack/react-query";
+import type { SiteSetting } from "@shared/schema";
 
-interface WhatsAppButtonProps {
-  phoneNumber: string;
-}
+export function WhatsAppButton() {
+  const { data: settings } = useQuery<SiteSetting>({
+    queryKey: ["/api/settings"],
+  });
 
-export default function WhatsAppButton({ phoneNumber }: WhatsAppButtonProps) {
+  const whatsappNumber = settings?.whatsapp || "07016342022";
+
   const handleClick = () => {
-    const cleanNumber = phoneNumber.replace(/[^0-9]/g, '');
+    const cleanNumber = whatsappNumber.replace(/[^0-9]/g, '');
     window.open(`https://wa.me/${cleanNumber}`, '_blank');
   };
 
   return (
-    <Button
-      size="icon"
-      className="fixed bottom-4 right-4 md:bottom-6 md:right-6 h-14 w-14 md:h-16 md:w-16 rounded-full shadow-2xl bg-[#25D366] hover:bg-[#20BA59] text-white z-50 animate-pulse"
+    <button
       onClick={handleClick}
       data-testid="button-whatsapp"
       aria-label="Contact us on WhatsApp"
+      className="fixed bottom-6 right-6 z-50 w-14 h-14 md:w-16 md:h-16 bg-[#25D366] hover:bg-[#20BA59] dark:bg-[#20BA59] dark:hover:bg-[#1DA851] text-white rounded-full shadow-lg transition-all duration-300 hover:scale-110 active:scale-95 flex items-center justify-center"
     >
-      <MessageCircle className="h-7 w-7 md:h-8 md:w-8" />
-    </Button>
+      <MessageCircle className="w-6 h-6 md:w-7 md:h-7" />
+    </button>
   );
 }
