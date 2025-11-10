@@ -44,8 +44,13 @@ export const productImages = pgTable("product_images", {
 
 export const siteSettings = pgTable("site_settings", {
   id: integer("id").primaryKey().generatedAlwaysAsIdentity(),
-  background: text("background"),
-  whatsapp: text("whatsapp"),
+  storeName: text("store_name").default("AL-MUSLIMAH CLOTHINGS & SHOES").notNull(),
+  whatsapp: text("whatsapp").default("07016342022"),
+  telegram: text("telegram").default("07016342022"),
+  facebook: text("facebook"),
+  locationKontagora: text("location_kontagora").default("1st floor by LAPO office, Madengene plaza, Opposite Korna amala, Kontagora, Niger state."),
+  locationAbuja: text("location_abuja").default("Opposite Zahra bread, Compensation lay out, Old kutunku, Gwagwalada FCT, Abuja."),
+  heroImageUrl: text("hero_image_url"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
