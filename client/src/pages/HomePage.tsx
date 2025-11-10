@@ -1,7 +1,14 @@
 import { useQuery } from "@tanstack/react-query";
 import { Link } from "wouter";
-import { CustomerNav } from "@/components/CustomerNav";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import Navbar from "@/components/Navbar"; // Changed from CustomerNav to Navbar
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +21,9 @@ export default function HomePage() {
     queryKey: ["/api/settings"],
   });
 
-  const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
+  const { data: categories, isLoading: categoriesLoading } = useQuery<
+    Category[]
+  >({
     queryKey: ["/api/categories"],
   });
 
@@ -27,15 +36,26 @@ export default function HomePage() {
   });
 
   const storeName = settings?.storeName || "AL-MUSLIMAH CLOTHINGS & SHOES";
-  const fallbackHeroImage = settings?.heroImageUrl || "https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop";
+  const fallbackHeroImage =
+    settings?.heroImageUrl ||
+    "https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop";
 
-  const heroImageUrls = heroImages && heroImages.length > 0 
-    ? heroImages.map(img => img.url)
-    : [fallbackHeroImage];
+  const heroImageUrls =
+    heroImages && heroImages.length > 0
+      ? heroImages.map((img) => img.url)
+      : [fallbackHeroImage];
+
+  // Prepare categories data for Navbar
+  const navbarCategories =
+    categories?.map((cat) => ({
+      name: cat.name,
+      slug: cat.slug,
+    })) || [];
 
   return (
     <div className="min-h-screen flex flex-col">
-      <CustomerNav />
+      {/* Replaced CustomerNav with Navbar and set isTransparent for hero section */}
+      <Navbar categories={navbarCategories} isTransparent={true} />
 
       <main className="flex-1">
         <section className="relative h-[300px] md:h-[400px] flex items-center justify-center overflow-hidden">
@@ -48,11 +68,22 @@ export default function HomePage() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 to-black/60" />
           <div className="relative z-10 text-center text-white px-4">
-            <h1 className="text-3xl md:text-5xl font-bold mb-4" data-testid="text-hero-title">{storeName}</h1>
-            <p className="text-lg md:text-xl mb-6">Quality Islamic Clothing & Accessories for Women</p>
+            <h1
+              className="text-3xl md:text-5xl font-bold mb-4"
+              data-testid="text-hero-title"
+            >
+              {storeName}
+            </h1>
+            <p className="text-lg md:text-xl mb-6">
+              Quality Islamic Clothing & Accessories for Women
+            </p>
             <div className="flex flex-wrap gap-4 justify-center">
               <Link href="/categories">
-                <Button variant="default" size="lg" data-testid="button-shop-now">
+                <Button
+                  variant="default"
+                  size="lg"
+                  data-testid="button-shop-now"
+                >
                   Shop Now
                 </Button>
               </Link>
@@ -62,7 +93,12 @@ export default function HomePage() {
 
         {categoriesLoading ? (
           <section className="container mx-auto px-4 py-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-8" data-testid="text-categories-heading">Shop by Category</h2>
+            <h2
+              className="text-2xl md:text-3xl font-bold mb-8"
+              data-testid="text-categories-heading"
+            >
+              Shop by Category
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {[1, 2, 3].map((i) => (
                 <Skeleton key={i} className="h-48" />
@@ -71,7 +107,12 @@ export default function HomePage() {
           </section>
         ) : categories && categories.length > 0 ? (
           <section className="container mx-auto px-4 py-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-8" data-testid="text-categories-heading">Shop by Category</h2>
+            <h2
+              className="text-2xl md:text-3xl font-bold mb-8"
+              data-testid="text-categories-heading"
+            >
+              Shop by Category
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
               {categories.map((category) => (
                 <Link key={category.id} href={`/category/${category.slug}`}>
@@ -79,7 +120,9 @@ export default function HomePage() {
                     {category.primaryImageUrl ? (
                       <div
                         className="h-40 bg-cover bg-center rounded-t-md"
-                        style={{ backgroundImage: `url(${category.primaryImageUrl})` }}
+                        style={{
+                          backgroundImage: `url(${category.primaryImageUrl})`,
+                        }}
                         data-testid={`img-category-${category.id}`}
                       />
                     ) : (
@@ -88,9 +131,13 @@ export default function HomePage() {
                       </div>
                     )}
                     <CardHeader>
-                      <CardTitle data-testid={`text-category-${category.id}`}>{category.name}</CardTitle>
+                      <CardTitle data-testid={`text-category-${category.id}`}>
+                        {category.name}
+                      </CardTitle>
                       {category.description && (
-                        <CardDescription>{category.description}</CardDescription>
+                        <CardDescription>
+                          {category.description}
+                        </CardDescription>
                       )}
                     </CardHeader>
                   </Card>
@@ -102,7 +149,12 @@ export default function HomePage() {
 
         {productsLoading ? (
           <section className="container mx-auto px-4 py-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-8" data-testid="text-products-heading">Featured Products</h2>
+            <h2
+              className="text-2xl md:text-3xl font-bold mb-8"
+              data-testid="text-products-heading"
+            >
+              Featured Products
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {[1, 2, 3, 4].map((i) => (
                 <Skeleton key={i} className="h-80" />
@@ -111,15 +163,25 @@ export default function HomePage() {
           </section>
         ) : products && products.length > 0 ? (
           <section className="container mx-auto px-4 py-12">
-            <h2 className="text-2xl md:text-3xl font-bold mb-8" data-testid="text-products-heading">Featured Products</h2>
+            <h2
+              className="text-2xl md:text-3xl font-bold mb-8"
+              data-testid="text-products-heading"
+            >
+              Featured Products
+            </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {products.slice(0, 8).map((product) => (
                 <Link key={product.id} href={`/product/${product.slug}`}>
-                  <Card className="hover-elevate cursor-pointer h-full flex flex-col" data-testid={`card-product-${product.id}`}>
+                  <Card
+                    className="hover-elevate cursor-pointer h-full flex flex-col"
+                    data-testid={`card-product-${product.id}`}
+                  >
                     {product.primaryImageUrl ? (
                       <div
                         className="h-48 bg-cover bg-center rounded-t-md"
-                        style={{ backgroundImage: `url(${product.primaryImageUrl})` }}
+                        style={{
+                          backgroundImage: `url(${product.primaryImageUrl})`,
+                        }}
                         data-testid={`img-product-${product.id}`}
                       />
                     ) : (
@@ -128,15 +190,22 @@ export default function HomePage() {
                       </div>
                     )}
                     <CardHeader className="flex-1">
-                      <CardTitle className="text-lg" data-testid={`text-product-${product.id}`}>
+                      <CardTitle
+                        className="text-lg"
+                        data-testid={`text-product-${product.id}`}
+                      >
                         {product.name}
                       </CardTitle>
                       {product.description && (
-                        <CardDescription className="line-clamp-2">{product.description}</CardDescription>
+                        <CardDescription className="line-clamp-2">
+                          {product.description}
+                        </CardDescription>
                       )}
                     </CardHeader>
                     <CardFooter className="flex flex-wrap items-center justify-between gap-2">
-                      <span className="text-xl font-bold">₦{product.price.toLocaleString()}</span>
+                      <span className="text-xl font-bold">
+                        ₦{product.price.toLocaleString()}
+                      </span>
                       {product.quantity !== null && product.quantity > 0 && (
                         <Badge variant="secondary">In Stock</Badge>
                       )}
@@ -150,7 +219,9 @@ export default function HomePage() {
 
         <section className="bg-muted/50 py-12">
           <div className="container mx-auto px-4">
-            <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center">Visit Our Stores</h2>
+            <h2 className="text-2xl md:text-3xl font-bold mb-8 text-center">
+              Visit Our Stores
+            </h2>
             <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
               <Card>
                 <CardHeader>
@@ -187,15 +258,24 @@ export default function HomePage() {
 
         <section className="bg-primary text-primary-foreground py-12">
           <div className="container mx-auto px-4 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-4">Connect With Us</h2>
-            <p className="mb-6 text-lg">Follow us on social media and chat with us directly</p>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">
+              Connect With Us
+            </h2>
+            <p className="mb-6 text-lg">
+              Follow us on social media and chat with us directly
+            </p>
             <div className="flex flex-wrap gap-4 justify-center">
               {settings?.telegram && (
                 <Button
                   variant="secondary"
                   size="lg"
                   className="gap-2"
-                  onClick={() => window.open(`https://t.me/${settings.telegram.replace(/\D/g, '')}`, '_blank')}
+                  onClick={() =>
+                    window.open(
+                      `https://t.me/${settings.telegram.replace(/\D/g, "")}`,
+                      "_blank",
+                    )
+                  }
                   data-testid="button-telegram"
                 >
                   <Send className="w-5 h-5" />
@@ -207,7 +287,7 @@ export default function HomePage() {
                   variant="secondary"
                   size="lg"
                   className="gap-2"
-                  onClick={() => window.open(settings.facebook, '_blank')}
+                  onClick={() => window.open(settings.facebook, "_blank")}
                   data-testid="button-facebook"
                 >
                   <Facebook className="w-5 h-5" />
@@ -221,7 +301,9 @@ export default function HomePage() {
 
       <footer className="border-t py-6">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
-          <p>&copy; {new Date().getFullYear()} {storeName}. All rights reserved.</p>
+          <p>
+            &copy; {new Date().getFullYear()} {storeName}. All rights reserved.
+          </p>
         </div>
       </footer>
     </div>
