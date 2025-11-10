@@ -28,7 +28,7 @@ export default function HomePage() {
 
   const storeName = settings?.storeName || "AL-MUSLIMAH CLOTHINGS & SHOES";
   const fallbackHeroImage = settings?.heroImageUrl || "https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop";
-  
+
   const heroImageUrls = heroImages && heroImages.length > 0 
     ? heroImages.map(img => img.url)
     : [fallbackHeroImage];
@@ -51,13 +51,11 @@ export default function HomePage() {
             <h1 className="text-3xl md:text-5xl font-bold mb-4" data-testid="text-hero-title">{storeName}</h1>
             <p className="text-lg md:text-xl mb-6">Quality Islamic Clothing & Accessories for Women</p>
             <div className="flex flex-wrap gap-4 justify-center">
-              {categories && categories.length > 0 && (
-                <Link href={`/category/${categories[0].slug}`}>
-                  <Button variant="default" size="lg" data-testid="button-shop-now">
-                    Shop Now
-                  </Button>
-                </Link>
-              )}
+              <Link href="/categories">
+                <Button variant="default" size="lg" data-testid="button-shop-now">
+                  Shop Now
+                </Button>
+              </Link>
             </div>
           </div>
         </section>

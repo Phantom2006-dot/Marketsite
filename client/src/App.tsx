@@ -26,6 +26,8 @@ function Router() {
       <Route path="/contact" component={ContactPage} />
       <Route path="/categories" component={AllCategoriesPage} />
       <Route path="/category/:slug" component={CategoryPage} />
+      <Route path="/category" component={AllCategoriesPage} />{" "}
+      {/* Add this line */}
       <Route path="/product/:slug" component={ProductDetailPage} />
       <Route path="/login" component={LoginPage} />
       <Route path="/dashboard" component={AdminDashboard} />

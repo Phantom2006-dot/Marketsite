@@ -1,7 +1,14 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { insertCategorySchema, insertCategoryImageSchema, insertProductSchema, insertProductImageSchema, insertHeroImageSchema, insertSiteSettingSchema } from "@shared/schema";
+import {
+  insertCategorySchema,
+  insertCategoryImageSchema,
+  insertProductSchema,
+  insertProductImageSchema,
+  insertHeroImageSchema,
+  insertSiteSettingSchema,
+} from "@shared/schema";
 import multer from "multer";
 import path from "path";
 import fs from "fs";
@@ -56,12 +63,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/categories/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+
+      // First, check if category exists
+      const existingCategory = await storage.getCategory(id);
+      if (!existingCategory) {
+        return res.status(404).json({ message: "Category not found" });
+      }
+
+      // Check if there are products in this category
+      const productsInCategory = await storage.getProductsByCategory(id);
+      if (productsInCategory && productsInCategory.length > 0) {
+        return res.status(400).json({
+          message:
+            "Cannot delete category with existing products. Please remove or reassign products first.",
+        });
+      }
+
       const deleted = await storage.deleteCategory(id);
       if (!deleted) {
-        return res.status(404).json({ message: "Category not found" });
+        return res.status(500).json({ message: "Failed to delete category" });
       }
       res.json({ success: true });
     } catch (error: any) {
+      console.error("Error deleting category:", error);
+
+      // Provide more specific error messages
+      if (error.message?.includes("foreign key constraint")) {
+        return res.status(400).json({
+          message:
+            "Cannot delete category because it is referenced by other records. Please remove all products and images first.",
+        });
+      }
+
       res.status(500).json({ message: error.message });
     }
   });
@@ -290,7 +323,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // File upload configuration
-  const uploadDir = path.join(process.cwd(), 'public/uploads');
+  const uploadDir = path.join(process.cwd(), "public/uploads");
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
   }
@@ -300,35 +333,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
       cb(null, uploadDir);
     },
     filename: function (_req, file, cb) {
-      const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
+      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
       cb(null, uniqueSuffix + path.extname(file.originalname));
-    }
+    },
   });
 
-  const upload = multer({ 
+  const upload = multer({
     storage: storage_multer,
     limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
     fileFilter: (_req, file, cb) => {
       const allowedTypes = /jpeg|jpg|png|gif|webp/;
-      const extname = allowedTypes.test(path.extname(file.originalname).toLowerCase());
+      const extname = allowedTypes.test(
+        path.extname(file.originalname).toLowerCase(),
+      );
       const mimetype = allowedTypes.test(file.mimetype);
-      
+
       if (mimetype && extname) {
         return cb(null, true);
       } else {
-        cb(new Error('Only image files are allowed'));
+        cb(new Error("Only image files are allowed"));
       }
-    }
+    },
   });
 
   // File upload endpoint with proper error handling
   app.post("/api/upload", (req, res) => {
-    upload.single('file')(req, res, (err) => {
+    upload.single("file")(req, res, (err) => {
       if (err) {
         if (err instanceof multer.MulterError) {
           // Handle Multer-specific errors
-          if (err.code === 'LIMIT_FILE_SIZE') {
-            return res.status(400).json({ message: "File size exceeds 5MB limit" });
+          if (err.code === "LIMIT_FILE_SIZE") {
+            return res
+              .status(400)
+              .json({ message: "File size exceeds 5MB limit" });
           }
           return res.status(400).json({ message: err.message });
         } else if (err) {
@@ -336,11 +373,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
           return res.status(400).json({ message: err.message });
         }
       }
-      
+
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
-      
+
       const fileUrl = `/uploads/${req.file.filename}`;
       return res.json({ url: fileUrl });
     });
