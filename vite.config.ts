@@ -3,11 +3,7 @@ import react from "@vitejs/plugin-react";
 import path from "path";
 
 export default defineConfig({
-  plugins: [
-    react(),
-    // Remove runtimeErrorOverlay and other Replit plugins
-    // They're only needed for Replit development environment
-  ],
+  plugins: [react()],
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "client", "src"),
@@ -19,6 +15,31 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
+    rollupOptions: {
+      // Explicitly mark node_modules as external if needed
+      external: [],
+      onwarn(warning, warn) {
+        // Suppress the specific warning about Radix UI
+        if (warning.code === 'MODULE_NOT_FOUND' && warning.id?.includes('@radix-ui')) {
+          return;
+        }
+        warn(warning);
+      }
+    }
+  },
+  optimizeDeps: {
+    include: [
+      '@radix-ui/react-tooltip',
+      '@radix-ui/react-dialog',
+      '@radix-ui/react-dropdown-menu',
+      // Add all Radix UI packages you're using
+    ],
+    esbuildOptions: {
+      // Ensure ESbuild can handle these packages
+      supported: {
+        'top-level-await': true
+      },
+    },
   },
   server: {
     fs: {
