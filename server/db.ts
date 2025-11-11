@@ -31,16 +31,16 @@ export const sql = postgres(connectionString, {
   connect_timeout: 10,
 });
 
-// Handle connection events
-sql.subscribe((event) => {
-  if (event === 'connect') {
-    console.log('✅ Connected to PostgreSQL database');
+// Simple connection test
+export async function testConnection() {
+  try {
+    const result = await sql`SELECT NOW()`;
+    console.log('✅ Database connection test passed');
+    return true;
+  } catch (error) {
+    console.error('❌ Database connection test failed:', error);
+    throw error;
   }
-});
-
-// Global error handler
-sql.subscribe('error', (error) => {
-  console.error('❌ Database connection error:', error);
-});
+}
 
 export const db = drizzle(sql, { schema });
