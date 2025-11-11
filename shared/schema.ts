@@ -59,6 +59,9 @@ export const siteSettings = pgTable("site_settings", {
   locationKontagora: text("location_kontagora").default("1st floor by LAPO office, Madengene plaza, Opposite Korna amala, Kontagora, Niger state."),
   locationAbuja: text("location_abuja").default("Opposite Zahra bread, Compensation lay out, Old kutunku, Gwagwalada FCT, Abuja."),
   heroImageUrl: text("hero_image_url"),
+  phone: text("phone"),
+  email: text("email"),
+  hours: text("hours"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
   updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
@@ -99,6 +102,7 @@ export const insertCategoryImageSchema = createInsertSchema(categoryImages, {
 
 export const insertProductSchema = createInsertSchema(products, {
   id: () => z.number().optional(),
+  price: () => z.number().min(0),
   createdAt: () => z.date().optional(),
   updatedAt: () => z.date().optional(),
 }).omit({
