@@ -1,6 +1,4 @@
-// db.ts
-import pkg from 'pg';
-const { Pool } = pkg;
+import { Pool } from 'pg';
 import { drizzle } from 'drizzle-orm/node-postgres';
 import * as schema from "@shared/schema";
 
