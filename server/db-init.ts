@@ -8,7 +8,7 @@ export async function initializeDatabase() {
     
     // Test the connection
     const result = await db.execute(sql`SELECT NOW()`);
-    console.log('✅ Database connection test passed:', result.rows[0].now);
+    console.log('✅ Database connection test passed');
     
     return true;
   } catch (error) {
