@@ -1,13 +1,12 @@
 // db-init.ts
-import { db } from './db';
-import { sql } from 'drizzle-orm';
+import { testConnection } from './db';
 
 export async function initializeDatabase() {
   try {
     console.log('🔄 Initializing database schema...');
     
-    // Test the connection
-    const result = await db.execute(sql`SELECT NOW()`);
+    // Test the connection using our new function
+    await testConnection();
     console.log('✅ Database connection test passed');
     
     return true;
