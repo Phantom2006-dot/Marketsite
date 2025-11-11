@@ -1,6 +1,11 @@
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import path from "path";
+import { fileURLToPath } from 'url';
+
+// ES module compatible __dirname equivalent
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 export default defineConfig({
   plugins: [react()],
@@ -15,31 +20,6 @@ export default defineConfig({
   build: {
     outDir: path.resolve(__dirname, "dist/public"),
     emptyOutDir: true,
-    rollupOptions: {
-      // Explicitly mark node_modules as external if needed
-      external: [],
-      onwarn(warning, warn) {
-        // Suppress the specific warning about Radix UI
-        if (warning.code === 'MODULE_NOT_FOUND' && warning.id?.includes('@radix-ui')) {
-          return;
-        }
-        warn(warning);
-      }
-    }
-  },
-  optimizeDeps: {
-    include: [
-      '@radix-ui/react-tooltip',
-      '@radix-ui/react-dialog',
-      '@radix-ui/react-dropdown-menu',
-      // Add all Radix UI packages you're using
-    ],
-    esbuildOptions: {
-      // Ensure ESbuild can handle these packages
-      supported: {
-        'top-level-await': true
-      },
-    },
   },
   server: {
     fs: {
