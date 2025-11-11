@@ -1,6 +1,6 @@
 // db.ts
-import { Pool } from 'pg';
-import { drizzle } from 'drizzle-orm/node-postgres';
+import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
 import * as schema from "@shared/schema";
 
 // Get database URL with fallback for development
@@ -22,25 +22,25 @@ const connectionString = getDatabaseUrl();
 
 console.log('🔗 Using database:', connectionString.split('@')[1]); // Log only the host for security
 
-export const pool = new Pool({
-  connectionString,
+export const sql = postgres(connectionString, {
   // SSL is required for Render PostgreSQL
-  ssl: {
-    rejectUnauthorized: false
-  },
+  ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
   // Connection pool settings
   max: 20,
-  idleTimeoutMillis: 30000,
-  connectionTimeoutMillis: 10000,
+  idle_timeout: 30,
+  connect_timeout: 10,
 });
 
 // Handle connection events
-pool.on('connect', () => {
-  console.log('✅ Connected to PostgreSQL database');
+sql.subscribe((event) => {
+  if (event === 'connect') {
+    console.log('✅ Connected to PostgreSQL database');
+  }
 });
 
-pool.on('error', (err) => {
-  console.error('❌ Database connection error:', err);
+// Global error handler
+sql.subscribe('error', (error) => {
+  console.error('❌ Database connection error:', error);
 });
 
-export const db = drizzle(pool, { schema });
+export const db = drizzle(sql, { schema });
