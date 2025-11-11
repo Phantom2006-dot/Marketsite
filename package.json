@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "NODE_ENV=development tsx server/index.ts",
     "prebuild": "npm list @radix-ui/react-tooltip && ls -la node_modules/@radix-ui/ || echo 'Dependency check failed, continuing build...'",
-    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist",
+    "build": "vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist --banner:js='import { createRequire } from \"module\"; const require = createRequire(import.meta.url);'",
     "clean-install": "rm -rf node_modules package-lock.json && npm install",
     "start": "NODE_ENV=production node dist/index.js",
     "check": "tsc",
