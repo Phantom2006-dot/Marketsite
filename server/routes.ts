@@ -12,6 +12,7 @@ import {
 import multer from "multer";
 import path from "path";
 import fs from "fs";
+import { cloudinary } from "./lib/cloudinary";
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Category routes
@@ -140,6 +141,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/category-images/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Get the image first to extract Cloudinary public ID for deletion
+      const image = await storage.getCategoryImage(id);
+      if (image && image.url) {
+        // Extract public_id from Cloudinary URL if it exists
+        const urlParts = image.url.split('/');
+        const fileNameWithExtension = urlParts[urlParts.length - 1];
+        const publicId = fileNameWithExtension.split('.')[0];
+        
+        // Only try to delete from Cloudinary if it's a Cloudinary URL
+        if (image.url.includes('cloudinary.com') && publicId) {
+          try {
+            await cloudinary.uploader.destroy(`al-muslimah/${publicId}`);
+          } catch (cloudinaryError) {
+            console.warn('Failed to delete from Cloudinary:', cloudinaryError);
+            // Continue with database deletion even if Cloudinary deletion fails
+          }
+        }
+      }
+      
       const deleted = await storage.deleteCategoryImage(id);
       if (!deleted) {
         return res.status(404).json({ message: "Image not found" });
@@ -209,6 +230,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/products/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Delete product images from Cloudinary first
+      const productImages = await storage.getProductImages(id);
+      for (const image of productImages) {
+        if (image.url && image.url.includes('cloudinary.com')) {
+          const urlParts = image.url.split('/');
+          const fileNameWithExtension = urlParts[urlParts.length - 1];
+          const publicId = fileNameWithExtension.split('.')[0];
+          
+          if (publicId) {
+            try {
+              await cloudinary.uploader.destroy(`al-muslimah/${publicId}`);
+            } catch (cloudinaryError) {
+              console.warn('Failed to delete product image from Cloudinary:', cloudinaryError);
+            }
+          }
+        }
+      }
+      
       const deleted = await storage.deleteProduct(id);
       if (!deleted) {
         return res.status(404).json({ message: "Product not found" });
@@ -260,6 +300,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/product-images/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Get the image first to extract Cloudinary public ID for deletion
+      const image = await storage.getProductImage(id);
+      if (image && image.url) {
+        // Extract public_id from Cloudinary URL if it exists
+        const urlParts = image.url.split('/');
+        const fileNameWithExtension = urlParts[urlParts.length - 1];
+        const publicId = fileNameWithExtension.split('.')[0];
+        
+        // Only try to delete from Cloudinary if it's a Cloudinary URL
+        if (image.url.includes('cloudinary.com') && publicId) {
+          try {
+            await cloudinary.uploader.destroy(`al-muslimah/${publicId}`);
+          } catch (cloudinaryError) {
+            console.warn('Failed to delete from Cloudinary:', cloudinaryError);
+            // Continue with database deletion even if Cloudinary deletion fails
+          }
+        }
+      }
+      
       const deleted = await storage.deleteProductImage(id);
       if (!deleted) {
         return res.status(404).json({ message: "Image not found" });
@@ -293,6 +353,26 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete("/api/hero-images/:id", async (req, res) => {
     try {
       const id = parseInt(req.params.id);
+      
+      // Get the image first to extract Cloudinary public ID for deletion
+      const image = await storage.getHeroImage(id);
+      if (image && image.url) {
+        // Extract public_id from Cloudinary URL if it exists
+        const urlParts = image.url.split('/');
+        const fileNameWithExtension = urlParts[urlParts.length - 1];
+        const publicId = fileNameWithExtension.split('.')[0];
+        
+        // Only try to delete from Cloudinary if it's a Cloudinary URL
+        if (image.url.includes('cloudinary.com') && publicId) {
+          try {
+            await cloudinary.uploader.destroy(`al-muslimah/${publicId}`);
+          } catch (cloudinaryError) {
+            console.warn('Failed to delete from Cloudinary:', cloudinaryError);
+            // Continue with database deletion even if Cloudinary deletion fails
+          }
+        }
+      }
+      
       const deleted = await storage.deleteHeroImage(id);
       if (!deleted) {
         return res.status(404).json({ message: "Image not found" });
@@ -322,7 +402,62 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // File upload configuration
+  // NEW: Cloudinary File Upload Endpoint
+  app.post("/api/upload", async (req, res) => {
+    try {
+      if (!req.rawBody) {
+        return res.status(400).json({ message: "No file data received" });
+      }
+
+      // Get content type and validate it's an image
+      const contentType = req.headers['content-type'];
+      if (!contentType?.startsWith('image/')) {
+        return res.status(400).json({ message: "Only image files are allowed" });
+      }
+
+      // Check file size (5MB limit)
+      if (req.rawBody.length > 5 * 1024 * 1024) {
+        return res.status(400).json({ message: "File size exceeds 5MB limit" });
+      }
+
+      // Convert buffer to base64 for Cloudinary
+      const base64Data = req.rawBody.toString('base64');
+      const dataUri = `data:${contentType};base64,${base64Data}`;
+
+      // Upload to Cloudinary
+      const uploadResult = await cloudinary.uploader.upload(dataUri, {
+        folder: "al-muslimah",
+        resource_type: "image",
+        quality: "auto",
+        fetch_format: "auto",
+      });
+
+      console.log('Cloudinary upload successful:', uploadResult.secure_url);
+
+      return res.json({ 
+        url: uploadResult.secure_url // Permanent Cloudinary URL
+      });
+
+    } catch (error: any) {
+      console.error('Cloudinary upload error:', error);
+      
+      // Handle Cloudinary-specific errors
+      if (error.message?.includes('File size too large')) {
+        return res.status(400).json({ message: "File size exceeds 5MB limit" });
+      }
+      
+      if (error.message?.includes('Invalid image file')) {
+        return res.status(400).json({ message: "Invalid image file" });
+      }
+
+      return res.status(500).json({ 
+        message: "Failed to upload image to cloud storage",
+        error: error.message 
+      });
+    }
+  });
+
+  // Keep the old upload endpoint for backward compatibility during transition
   const uploadDir = path.join(process.cwd(), "public/uploads");
   if (!fs.existsSync(uploadDir)) {
     fs.mkdirSync(uploadDir, { recursive: true });
@@ -340,7 +475,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   const upload = multer({
     storage: storage_multer,
-    limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
+    limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (_req, file, cb) => {
       const allowedTypes = /jpeg|jpg|png|gif|webp/;
       const extname = allowedTypes.test(
@@ -356,20 +491,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   });
 
-  // File upload endpoint with proper error handling
-  app.post("/api/upload", (req, res) => {
+  // Legacy upload endpoint (you can remove this after full transition)
+  app.post("/api/upload-legacy", (req, res) => {
     upload.single("file")(req, res, (err) => {
       if (err) {
         if (err instanceof multer.MulterError) {
-          // Handle Multer-specific errors
           if (err.code === "LIMIT_FILE_SIZE") {
-            return res
-              .status(400)
-              .json({ message: "File size exceeds 5MB limit" });
+            return res.status(400).json({ message: "File size exceeds 5MB limit" });
           }
           return res.status(400).json({ message: err.message });
         } else if (err) {
-          // Handle other errors (like file type validation)
           return res.status(400).json({ message: err.message });
         }
       }
@@ -384,6 +515,5 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   const httpServer = createServer(app);
-
   return httpServer;
 }
