@@ -126,12 +126,12 @@ export default function LoginPage() {
                 )}
               </Button>
 
-              {/* Demo credentials hint */}
+              /* {/* Demo credentials hint */}
               <div className="text-center text-sm text-muted-foreground mt-4 p-3 bg-muted rounded-lg">
                 <p className="font-medium">Demo Credentials:</p>
                 <p>Username: <strong>admin</strong></p>
                 <p>Password: <strong>Admin1234</strong></p>
-              </div>
+              </div> */
             </form>
           </CardContent>
         </Card>
