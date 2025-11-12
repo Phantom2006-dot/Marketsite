@@ -17,13 +17,11 @@ import ImageCarousel from "@/components/ImageCarousel";
 import type { Category, Product, SiteSetting, HeroImage } from "@shared/schema";
 
 export default function HomePage() {
-  const { data: settings, isLoading: settingsLoading } = useQuery<SiteSetting>({
+  const { data: settings, isLoading: settingsLoading, error: settingsError } = useQuery<SiteSetting>({
     queryKey: ["/api/settings"],
   });
 
-  const { data: categories, isLoading: categoriesLoading } = useQuery<
-    Category[]
-  >({
+  const { data: categories, isLoading: categoriesLoading } = useQuery<Category[]>({
     queryKey: ["/api/categories"],
   });
 
@@ -31,55 +29,73 @@ export default function HomePage() {
     queryKey: ["/api/products"],
   });
 
-  const { data: heroImages } = useQuery<HeroImage[]>({
+  const { data: heroImages, error: heroImagesError } = useQuery<HeroImage[]>({
     queryKey: ["/api/hero-images"],
   });
 
-   // === ADD DEBUGGING CODE RIGHT HERE ===
-  console.log("=== DEBUG HERO IMAGE ===");
-  console.log("Full settings object:", settings);
-  console.log("heroImageUrl from settings:", settings?.heroImageUrl);
-  console.log("Type of heroImageUrl:", typeof settings?.heroImageUrl);
-  console.log("Is heroImageUrl truthy?", !!settings?.heroImageUrl);
-  console.log("Hero images API data:", heroImages);
-  console.log("Final heroImageUrls array:", heroImageUrls);
-  console.log("=========================");
-  // === END DEBUGGING CODE ===
-
+  // Debug errors
+  if (settingsError) {
+    console.error("Settings API error:", settingsError);
+  }
+  if (heroImagesError) {
+    console.error("Hero images API error:", heroImagesError);
+  }
 
   const storeName = settings?.storeName || "AL-MUSLIMAH CLOTHINGS & SHOES";
 
-  // FIXED: Prioritize admin-set hero image over heroImages array
-  const heroImageUrls =
-    // First priority: heroImageUrl from settings (admin panel)
-    settings?.heroImageUrl
-      ? [settings.heroImageUrl]
-      : // Second priority: heroImages from /api/hero-images
-        heroImages && heroImages.length > 0
-        ? heroImages.map((img) => img.url)
-        : // Fallback: default image
-          [
-            "https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop",
-          ];
+  // FIXED: Handle relative URLs and undefined data
+  const heroImageUrls = (() => {
+    const baseUrl = window.location.origin;
+    
+    // Priority 1: Settings heroImageUrl (convert to absolute if relative)
+    if (settings?.heroImageUrl) {
+      const absoluteUrl = settings.heroImageUrl.startsWith('http') 
+        ? settings.heroImageUrl 
+        : `${baseUrl}${settings.heroImageUrl}`;
+      console.log("Using hero image:", absoluteUrl);
+      return [absoluteUrl];
+    }
+    
+    // Priority 2: Hero images from API (convert URLs)
+    if (heroImages && heroImages.length > 0) {
+      const urls = heroImages.map((img) => 
+        img.url.startsWith('http') ? img.url : `${baseUrl}${img.url}`
+      );
+      console.log("Using hero images:", urls);
+      return urls;
+    }
+    
+    // Fallback
+    console.log("Using fallback hero image");
+    return [
+      "https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop",
+    ];
+  })();
 
-  // Debug: Check what images are being used
-  console.log("Settings heroImageUrl:", settings?.heroImageUrl);
-  console.log("Hero images from API:", heroImages);
-  console.log("Final hero image URLs:", heroImageUrls);
+  // Prepare categories data for Navbar - handle undefined
+  const navbarCategories = (categories || []).map((cat) => ({
+    name: cat.name,
+    slug: cat.slug,
+  }));
 
-  // Prepare categories data for Navbar
-  const navbarCategories =
-    categories?.map((cat) => ({
-      name: cat.name,
-      slug: cat.slug,
-    })) || [];
+  // Show loading state if critical data is loading
+  if (settingsLoading && categoriesLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
+          <p>Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen flex flex-col" data-testid="home-page">
       <Navbar categories={navbarCategories} isTransparent={true} />
 
       <main className="flex-1">
-        {/* Increased hero section height and improved styling */}
+        {/* Hero section with safe image handling */}
         <section 
           className="relative h-[500px] md:h-[600px] flex items-center justify-center overflow-hidden"
           data-testid="hero-section"
@@ -490,7 +506,7 @@ export default function HomePage() {
                       className="text-sm"
                       data-testid="text-phone-number"
                     >
-                      {settings?.phone || "+2347016342022"}
+                      {settings?.phone || "+234 XXX XXX XXXX"}
                     </span>
                   </div>
                   <div 
