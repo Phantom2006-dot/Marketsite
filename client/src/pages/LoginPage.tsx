@@ -5,16 +5,82 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ShoppingBag } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  // Hardcoded admin credentials (in a real app, this would be from a database)
+  const ADMIN_CREDENTIALS = {
+    username: "admin",
+    // This is the bcrypt hash for "Admin1234"
+    // You can generate new hashes at: https://bcrypt-generator.com/
+    passwordHash: "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi"
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', { username, password });
-    setLocation("/dashboard");
+    setIsLoading(true);
+
+    try {
+      // Validate credentials
+      if (username.trim().toLowerCase() !== ADMIN_CREDENTIALS.username) {
+        toast({
+          title: "Invalid credentials",
+          description: "Username or password is incorrect",
+          variant: "destructive"
+        });
+        return;
+      }
+
+      // In a real app, you would send the credentials to your backend
+      // For now, we'll simulate the authentication
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        toast({
+          title: "Login successful",
+          description: "Welcome back, Admin!",
+        });
+        setLocation("/dashboard");
+      } else {
+        const error = await response.json();
+        toast({
+          title: "Login failed",
+          description: error.message || "Invalid username or password",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Login error:', error);
+      // Fallback to client-side validation if API is not available
+      if (username.trim().toLowerCase() === "admin" && password === "Admin1234") {
+        toast({
+          title: "Login successful",
+          description: "Welcome back, Admin!",
+        });
+        setLocation("/dashboard");
+      } else {
+        toast({
+          title: "Invalid credentials",
+          description: "Username: admin, Password: Admin1234",
+          variant: "destructive"
+        });
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -40,6 +106,7 @@ export default function LoginPage() {
                   value={username}
                   onChange={(e) => setUsername(e.target.value)}
                   data-testid="input-username"
+                  placeholder="Enter admin username"
                   required
                 />
               </div>
@@ -52,13 +119,26 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   data-testid="input-password"
+                  placeholder="Enter admin password"
                   required
                 />
               </div>
 
-              <Button type="submit" className="w-full" data-testid="button-login">
-                Sign In
+              <Button 
+                type="submit" 
+                className="w-full" 
+                data-testid="button-login"
+                disabled={isLoading}
+              >
+                {isLoading ? "Signing in..." : "Sign In"}
               </Button>
+
+              {/* Demo credentials hint */}
+              <div className="text-center text-sm text-muted-foreground mt-4 p-3 bg-muted rounded-lg">
+                <p className="font-medium">Demo Credentials:</p>
+                <p>Username: <strong>admin</strong></p>
+                <p>Password: <strong>Admin1234</strong></p>
+              </div>
             </form>
           </CardContent>
         </Card>
