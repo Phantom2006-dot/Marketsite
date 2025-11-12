@@ -39,31 +39,38 @@ export default function AdminSettings() {
       whatsapp: "07016342022",
       telegram: "07016342022",
       facebook: "",
-      locationKontagora:
-        "1st floor by LAPO office, Madengene plaza, Opposite Korna amala, Kontagora, Niger state.",
-      locationAbuja:
-        "Opposite Zahra bread, Compensation lay out, Old kutunku, Gwagwalada FCT, Abuja.",
+      locationKontagora: "1st floor by LAPO office, Madengene plaza, Opposite Korna amala, Kontagora, Niger state.",
+      locationAbuja: "Opposite Zahra bread, Compensation lay out, Old kutunku, Gwagwalada FCT, Abuja.",
       heroImageUrl: "",
     },
   });
 
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
-      return await apiRequest("/api/settings", {
+      console.log('Updating settings with data:', data);
+      const res = await apiRequest("/api/settings", {
         method: "PATCH",
+        headers: {
+          'Content-Type': 'application/json',
+        },
         body: JSON.stringify(data),
       });
+      return res.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
       setSelectedFile(null);
       setImagePreview(null);
-      toast({ title: "Settings updated successfully" });
+      toast({ 
+        title: "Success", 
+        description: "Settings updated successfully" 
+      });
     },
     onError: (error: any) => {
+      console.error('Settings update error:', error);
       toast({
-        title: "Error",
-        description: error.message,
+        title: "Error updating settings",
+        description: error.message || "Failed to save settings",
         variant: "destructive",
       });
     },
@@ -73,34 +80,56 @@ export default function AdminSettings() {
     const formData = new FormData();
     formData.append("file", file);
 
+    console.log('Uploading file:', file.name);
+    
     const response = await fetch("/api/upload", {
       method: "POST",
       body: formData,
     });
 
     if (!response.ok) {
-      throw new Error("Failed to upload file");
+      const errorText = await response.text();
+      console.error('Upload failed:', errorText);
+      throw new Error("Failed to upload file: " + errorText);
     }
 
     const result = await response.json();
+    console.log('Upload successful, URL:', result.url);
     return result.url;
   };
 
   const handleSubmit = async (data: any) => {
     try {
       setIsUploading(true);
+      console.log('Form submitted with data:', data);
 
       // If there's a selected file, upload it first
       if (selectedFile) {
+        console.log('Uploading selected file:', selectedFile.name);
         const imageUrl = await uploadFile(selectedFile);
         data.heroImageUrl = imageUrl;
+        console.log('Updated data with new hero image:', data);
       }
 
-      updateMutation.mutate(data);
+      // Ensure we have all required fields with fallbacks
+      const submitData = {
+        storeName: data.storeName || "AL-MUSLIMAH CLOTHINGS & SHOES",
+        whatsapp: data.whatsapp || "07016342022",
+        telegram: data.telegram || "07016342022",
+        facebook: data.facebook || "",
+        locationKontagora: data.locationKontagora || "1st floor by LAPO office, Madengene plaza, Opposite Korna amala, Kontagora, Niger state.",
+        locationAbuja: data.locationAbuja || "Opposite Zahra bread, Compensation lay out, Old kutunku, Gwagwalada FCT, Abuja.",
+        heroImageUrl: data.heroImageUrl || "",
+      };
+
+      console.log('Final data to submit:', submitData);
+      updateMutation.mutate(submitData);
+      
     } catch (error: any) {
+      console.error('Submit error:', error);
       toast({
         title: "Error",
-        description: error.message,
+        description: error.message || "Failed to save settings",
         variant: "destructive",
       });
     } finally {
@@ -111,6 +140,27 @@ export default function AdminSettings() {
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
+      // Validate file size (5MB limit)
+      if (file.size > 5 * 1024 * 1024) {
+        toast({
+          title: "File too large",
+          description: "Please select an image smaller than 5MB",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      // Validate file type
+      const validTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif', 'image/webp'];
+      if (!validTypes.includes(file.type)) {
+        toast({
+          title: "Invalid file type",
+          description: "Please select a JPEG, PNG, GIF, or WebP image",
+          variant: "destructive",
+        });
+        return;
+      }
+
       setSelectedFile(file);
       const reader = new FileReader();
       reader.onloadend = () => {
@@ -122,17 +172,19 @@ export default function AdminSettings() {
 
   const removeExistingHeroImage = () => {
     form.setValue("heroImageUrl", "");
-    // Force immediate form submission to remove the hero image
-    form.handleSubmit(handleSubmit)();
+    // Create update data without the hero image
+    const updateData = {
+      ...form.getValues(),
+      heroImageUrl: ""
+    };
+    updateMutation.mutate(updateData);
   };
 
   const removeNewHeroImage = () => {
     setSelectedFile(null);
     setImagePreview(null);
     // Clear the file input
-    const fileInput = document.querySelector(
-      'input[type="file"]',
-    ) as HTMLInputElement;
+    const fileInput = document.querySelector('input[type="file"]') as HTMLInputElement;
     if (fileInput) {
       fileInput.value = "";
     }
@@ -144,10 +196,7 @@ export default function AdminSettings() {
 
       <main className="flex-1 container mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1
-            className="text-3xl font-bold mb-2"
-            data-testid="text-settings-title"
-          >
+          <h1 className="text-3xl font-bold mb-2" data-testid="text-settings-title">
             Store Settings
           </h1>
           <p className="text-muted-foreground">
@@ -167,10 +216,7 @@ export default function AdminSettings() {
             </Card>
           ) : (
             <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(handleSubmit)}
-                className="space-y-6"
-              >
+              <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-6">
                 <Card>
                   <CardHeader>
                     <CardTitle>Store Information</CardTitle>
@@ -209,9 +255,7 @@ export default function AdminSettings() {
                             className="w-full h-48 object-cover rounded-md border"
                           />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <p className="text-white text-sm">
-                              Current Hero Image
-                            </p>
+                            <p className="text-white text-sm">Current Hero Image</p>
                           </div>
                           <Button
                             type="button"
@@ -235,9 +279,7 @@ export default function AdminSettings() {
                             className="w-full h-48 object-cover rounded-md border"
                           />
                           <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                            <p className="text-white text-sm">
-                              New Hero Image Preview
-                            </p>
+                            <p className="text-white text-sm">New Hero Image Preview</p>
                           </div>
                           <Button
                             type="button"
@@ -262,22 +304,16 @@ export default function AdminSettings() {
                           id="hero-image-file"
                           data-testid="input-hero-image-file"
                         />
-                        <label
-                          htmlFor="hero-image-file"
-                          className="cursor-pointer block"
-                        >
+                        <label htmlFor="hero-image-file" className="cursor-pointer block">
                           <div className="flex flex-col items-center gap-2">
                             <div className="w-12 h-12 bg-muted rounded-full flex items-center justify-center">
                               <span className="text-2xl">+</span>
                             </div>
                             <p className="text-sm font-medium">
-                              {settings?.heroImageUrl
-                                ? "Replace Hero Image"
-                                : "Upload Hero Image"}
+                              {settings?.heroImageUrl ? "Replace Hero Image" : "Upload Hero Image"}
                             </p>
                             <p className="text-xs text-muted-foreground">
-                              Click to upload a background image for your
-                              homepage (Max 5MB)
+                              Click to upload a background image for your homepage (Max 5MB)
                             </p>
                           </div>
                         </label>
@@ -286,8 +322,7 @@ export default function AdminSettings() {
                       {/* Show current hero image URL if exists */}
                       {settings?.heroImageUrl && (
                         <div className="text-xs text-muted-foreground p-2 bg-muted rounded">
-                          <strong>Current Image:</strong>{" "}
-                          {settings.heroImageUrl}
+                          <strong>Current Image:</strong> {settings.heroImageUrl}
                         </div>
                       )}
                     </div>
@@ -439,9 +474,7 @@ export default function AdminSettings() {
                     disabled={updateMutation.isPending || isUploading}
                     data-testid="button-save"
                   >
-                    {updateMutation.isPending || isUploading
-                      ? "Saving..."
-                      : "Save Settings"}
+                    {(updateMutation.isPending || isUploading) ? "Saving..." : "Save Settings"}
                   </Button>
                 </div>
               </form>
