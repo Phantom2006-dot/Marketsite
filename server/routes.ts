@@ -144,20 +144,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the image first to extract Cloudinary public ID for deletion
       const image = await storage.getCategoryImage(id);
-      if (image && image.url) {
-        // Extract public_id from Cloudinary URL if it exists
-        const urlParts = image.url.split('/');
-        const fileNameWithExtension = urlParts[urlParts.length - 1];
-        const publicId = fileNameWithExtension.split('.')[0];
-        
-        // Only try to delete from Cloudinary if it's a Cloudinary URL
-        if (image.url.includes('cloudinary.com') && publicId) {
-          try {
-            await cloudinary.uploader.destroy(`al-muslimah/${publicId}`);
-          } catch (cloudinaryError) {
-            console.warn('Failed to delete from Cloudinary:', cloudinaryError);
-            // Continue with database deletion even if Cloudinary deletion fails
+      if (image && image.url && image.url.includes('cloudinary.com')) {
+        try {
+          // Extract public_id from Cloudinary URL properly
+          const urlParts = image.url.split('/');
+          const uploadIndex = urlParts.indexOf('upload');
+          if (uploadIndex !== -1) {
+            // Get everything after 'upload' and remove file extension
+            const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
+            const publicId = pathAfterUpload.replace(/\.[^/.]+$/, ""); // Remove file extension
+            
+            if (publicId) {
+              await cloudinary.uploader.destroy(publicId);
+              console.log('Deleted from Cloudinary:', publicId);
+            }
           }
+        } catch (cloudinaryError) {
+          console.warn('Failed to delete from Cloudinary:', cloudinaryError);
+          // Continue with database deletion even if Cloudinary deletion fails
         }
       }
       
@@ -235,16 +239,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const productImages = await storage.getProductImages(id);
       for (const image of productImages) {
         if (image.url && image.url.includes('cloudinary.com')) {
-          const urlParts = image.url.split('/');
-          const fileNameWithExtension = urlParts[urlParts.length - 1];
-          const publicId = fileNameWithExtension.split('.')[0];
-          
-          if (publicId) {
-            try {
-              await cloudinary.uploader.destroy(`al-muslimah/${publicId}`);
-            } catch (cloudinaryError) {
-              console.warn('Failed to delete product image from Cloudinary:', cloudinaryError);
+          try {
+            const urlParts = image.url.split('/');
+            const uploadIndex = urlParts.indexOf('upload');
+            if (uploadIndex !== -1) {
+              const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
+              const publicId = pathAfterUpload.replace(/\.[^/.]+$/, "");
+              
+              if (publicId) {
+                await cloudinary.uploader.destroy(publicId);
+                console.log('Deleted product image from Cloudinary:', publicId);
+              }
             }
+          } catch (cloudinaryError) {
+            console.warn('Failed to delete product image from Cloudinary:', cloudinaryError);
           }
         }
       }
@@ -303,20 +311,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the image first to extract Cloudinary public ID for deletion
       const image = await storage.getProductImage(id);
-      if (image && image.url) {
-        // Extract public_id from Cloudinary URL if it exists
-        const urlParts = image.url.split('/');
-        const fileNameWithExtension = urlParts[urlParts.length - 1];
-        const publicId = fileNameWithExtension.split('.')[0];
-        
-        // Only try to delete from Cloudinary if it's a Cloudinary URL
-        if (image.url.includes('cloudinary.com') && publicId) {
-          try {
-            await cloudinary.uploader.destroy(`al-muslimah/${publicId}`);
-          } catch (cloudinaryError) {
-            console.warn('Failed to delete from Cloudinary:', cloudinaryError);
-            // Continue with database deletion even if Cloudinary deletion fails
+      if (image && image.url && image.url.includes('cloudinary.com')) {
+        try {
+          const urlParts = image.url.split('/');
+          const uploadIndex = urlParts.indexOf('upload');
+          if (uploadIndex !== -1) {
+            const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
+            const publicId = pathAfterUpload.replace(/\.[^/.]+$/, "");
+            
+            if (publicId) {
+              await cloudinary.uploader.destroy(publicId);
+              console.log('Deleted from Cloudinary:', publicId);
+            }
           }
+        } catch (cloudinaryError) {
+          console.warn('Failed to delete from Cloudinary:', cloudinaryError);
         }
       }
       
@@ -356,20 +365,21 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       // Get the image first to extract Cloudinary public ID for deletion
       const image = await storage.getHeroImage(id);
-      if (image && image.url) {
-        // Extract public_id from Cloudinary URL if it exists
-        const urlParts = image.url.split('/');
-        const fileNameWithExtension = urlParts[urlParts.length - 1];
-        const publicId = fileNameWithExtension.split('.')[0];
-        
-        // Only try to delete from Cloudinary if it's a Cloudinary URL
-        if (image.url.includes('cloudinary.com') && publicId) {
-          try {
-            await cloudinary.uploader.destroy(`al-muslimah/${publicId}`);
-          } catch (cloudinaryError) {
-            console.warn('Failed to delete from Cloudinary:', cloudinaryError);
-            // Continue with database deletion even if Cloudinary deletion fails
+      if (image && image.url && image.url.includes('cloudinary.com')) {
+        try {
+          const urlParts = image.url.split('/');
+          const uploadIndex = urlParts.indexOf('upload');
+          if (uploadIndex !== -1) {
+            const pathAfterUpload = urlParts.slice(uploadIndex + 1).join('/');
+            const publicId = pathAfterUpload.replace(/\.[^/.]+$/, "");
+            
+            if (publicId) {
+              await cloudinary.uploader.destroy(publicId);
+              console.log('Deleted from Cloudinary:', publicId);
+            }
           }
+        } catch (cloudinaryError) {
+          console.warn('Failed to delete from Cloudinary:', cloudinaryError);
         }
       }
       
@@ -402,79 +412,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  // NEW: Cloudinary File Upload Endpoint
-  app.post("/api/upload", async (req, res) => {
-    try {
-      if (!req.rawBody) {
-        return res.status(400).json({ message: "No file data received" });
-      }
-
-      // Get content type and validate it's an image
-      const contentType = req.headers['content-type'];
-      if (!contentType?.startsWith('image/')) {
-        return res.status(400).json({ message: "Only image files are allowed" });
-      }
-
-      // Check file size (5MB limit)
-      if (req.rawBody.length > 5 * 1024 * 1024) {
-        return res.status(400).json({ message: "File size exceeds 5MB limit" });
-      }
-
-      // Convert buffer to base64 for Cloudinary
-      const base64Data = req.rawBody.toString('base64');
-      const dataUri = `data:${contentType};base64,${base64Data}`;
-
-      // Upload to Cloudinary
-      const uploadResult = await cloudinary.uploader.upload(dataUri, {
-        folder: "al-muslimah",
-        resource_type: "image",
-        quality: "auto",
-        fetch_format: "auto",
-      });
-
-      console.log('Cloudinary upload successful:', uploadResult.secure_url);
-
-      return res.json({ 
-        url: uploadResult.secure_url // Permanent Cloudinary URL
-      });
-
-    } catch (error: any) {
-      console.error('Cloudinary upload error:', error);
-      
-      // Handle Cloudinary-specific errors
-      if (error.message?.includes('File size too large')) {
-        return res.status(400).json({ message: "File size exceeds 5MB limit" });
-      }
-      
-      if (error.message?.includes('Invalid image file')) {
-        return res.status(400).json({ message: "Invalid image file" });
-      }
-
-      return res.status(500).json({ 
-        message: "Failed to upload image to cloud storage",
-        error: error.message 
-      });
-    }
-  });
-
-  // Keep the old upload endpoint for backward compatibility during transition
-  const uploadDir = path.join(process.cwd(), "public/uploads");
-  if (!fs.existsSync(uploadDir)) {
-    fs.mkdirSync(uploadDir, { recursive: true });
-  }
-
-  const storage_multer = multer.diskStorage({
-    destination: function (_req, _file, cb) {
-      cb(null, uploadDir);
-    },
-    filename: function (_req, file, cb) {
-      const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
-      cb(null, uniqueSuffix + path.extname(file.originalname));
-    },
-  });
-
+  // NEW: Cloudinary File Upload Endpoint (FIXED VERSION)
   const upload = multer({
-    storage: storage_multer,
+    storage: multer.memoryStorage(),
     limits: { fileSize: 5 * 1024 * 1024 },
     fileFilter: (_req, file, cb) => {
       const allowedTypes = /jpeg|jpg|png|gif|webp/;
@@ -491,27 +431,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   });
 
-  // Legacy upload endpoint (you can remove this after full transition)
-  app.post("/api/upload-legacy", (req, res) => {
-    upload.single("file")(req, res, (err) => {
-      if (err) {
-        if (err instanceof multer.MulterError) {
-          if (err.code === "LIMIT_FILE_SIZE") {
-            return res.status(400).json({ message: "File size exceeds 5MB limit" });
-          }
-          return res.status(400).json({ message: err.message });
-        } else if (err) {
-          return res.status(400).json({ message: err.message });
-        }
-      }
-
+  app.post("/api/upload", upload.single("file"), async (req, res) => {
+    try {
       if (!req.file) {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      const fileUrl = `/uploads/${req.file.filename}`;
-      return res.json({ url: fileUrl });
-    });
+      console.log('Uploading file to Cloudinary:', {
+        originalname: req.file.originalname,
+        size: req.file.size,
+        mimetype: req.file.mimetype
+      });
+
+      // Convert buffer to base64 for Cloudinary
+      const base64Image = `data:${req.file.mimetype};base64,${req.file.buffer.toString('base64')}`;
+
+      // Upload to Cloudinary
+      const uploadResult = await cloudinary.uploader.upload(base64Image, {
+        folder: "al-muslimah",
+        resource_type: "image",
+        quality: "auto",
+        fetch_format: "auto",
+      });
+
+      console.log('Cloudinary upload successful:', uploadResult.secure_url);
+
+      return res.json({ 
+        url: uploadResult.secure_url
+      });
+
+    } catch (error: any) {
+      console.error('Cloudinary upload error:', error);
+      
+      if (error.message?.includes('File size too large')) {
+        return res.status(400).json({ message: "File size exceeds 5MB limit" });
+      }
+      
+      return res.status(500).json({ 
+        message: "Upload failed",
+        error: error.message 
+      });
+    }
   });
 
   const httpServer = createServer(app);
