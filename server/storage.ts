@@ -76,48 +76,6 @@ export interface IStorage {
 }
 
 export class DatabaseStorage implements IStorage {
-  // Helper method to convert relative URLs to absolute URLs
-  private convertImageUrl(url: string): string {
-    if (!url) return url;
-    const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 5000}`;
-    return url.startsWith('http') ? url : `${baseUrl}${url}`;
-  }
-
-  // Helper method for SiteSetting
-  private convertSiteSettingUrls(settings: SiteSetting): SiteSetting {
-    if (settings.heroImageUrl) {
-      return {
-        ...settings,
-        heroImageUrl: this.convertImageUrl(settings.heroImageUrl)
-      };
-    }
-    return settings;
-  }
-
-  // Helper method for HeroImage
-  private convertHeroImageUrls(image: HeroImage): HeroImage {
-    return {
-      ...image,
-      url: this.convertImageUrl(image.url)
-    };
-  }
-
-  // Helper method for CategoryImage
-  private convertCategoryImageUrls(image: CategoryImage): CategoryImage {
-    return {
-      ...image,
-      url: this.convertImageUrl(image.url)
-    };
-  }
-
-  // Helper method for ProductImage
-  private convertProductImageUrls(image: ProductImage): ProductImage {
-    return {
-      ...image,
-      url: this.convertImageUrl(image.url)
-    };
-  }
-
   // User operations
   async getUser(id: number): Promise<User | undefined> {
     const result = await db.select().from(users).where(eq(users.id, id));
@@ -168,7 +126,7 @@ export class DatabaseStorage implements IStorage {
 
     return rows.map(({ category, primaryImageUrl }) => ({
       ...category,
-      primaryImageUrl: primaryImageUrl ? this.convertImageUrl(primaryImageUrl) : undefined,
+      primaryImageUrl: primaryImageUrl ?? undefined,
     }));
   }
 
@@ -227,20 +185,18 @@ export class DatabaseStorage implements IStorage {
 
   // Category image operations
   async getCategoryImages(categoryId: number): Promise<CategoryImage[]> {
-    const images = await db
+    return db
       .select()
       .from(categoryImages)
       .where(eq(categoryImages.categoryId, categoryId))
       .orderBy(categoryImages.order);
-    
-    return images.map(img => this.convertCategoryImageUrls(img));
   }
 
   async createCategoryImage(
     image: InsertCategoryImage,
   ): Promise<CategoryImage> {
     const result = await db.insert(categoryImages).values(image).returning();
-    return this.convertCategoryImageUrls(result[0]);
+    return result[0];
   }
 
   async deleteCategoryImage(id: number): Promise<boolean> {
@@ -282,7 +238,7 @@ export class DatabaseStorage implements IStorage {
 
     return rows.map(({ product, primaryImageUrl }) => ({
       ...product,
-      primaryImageUrl: primaryImageUrl ? this.convertImageUrl(primaryImageUrl) : undefined,
+      primaryImageUrl: primaryImageUrl ?? undefined,
     }));
   }
 
@@ -345,18 +301,16 @@ export class DatabaseStorage implements IStorage {
 
   // Product image operations
   async getProductImages(productId: number): Promise<ProductImage[]> {
-    const images = await db
+    return db
       .select()
       .from(productImages)
       .where(eq(productImages.productId, productId))
       .orderBy(productImages.order);
-    
-    return images.map(img => this.convertProductImageUrls(img));
   }
 
   async createProductImage(image: InsertProductImage): Promise<ProductImage> {
     const result = await db.insert(productImages).values(image).returning();
-    return this.convertProductImageUrls(result[0]);
+    return result[0];
   }
 
   async deleteProductImage(id: number): Promise<boolean> {
@@ -369,13 +323,12 @@ export class DatabaseStorage implements IStorage {
 
   // Hero image operations
   async getHeroImages(): Promise<HeroImage[]> {
-    const images = await db.select().from(heroImages).orderBy(heroImages.order);
-    return images.map(img => this.convertHeroImageUrls(img));
+    return db.select().from(heroImages).orderBy(heroImages.order);
   }
 
   async createHeroImage(image: InsertHeroImage): Promise<HeroImage> {
     const result = await db.insert(heroImages).values(image).returning();
-    return this.convertHeroImageUrls(result[0]);
+    return result[0];
   }
 
   async deleteHeroImage(id: number): Promise<boolean> {
@@ -391,9 +344,9 @@ export class DatabaseStorage implements IStorage {
     const result = await db.select().from(siteSettings).limit(1);
     if (result.length === 0) {
       const newSettings = await db.insert(siteSettings).values({}).returning();
-      return this.convertSiteSettingUrls(newSettings[0]);
+      return newSettings[0];
     }
-    return this.convertSiteSettingUrls(result[0]);
+    return result[0];
   }
 
   async updateSiteSettings(
@@ -402,14 +355,14 @@ export class DatabaseStorage implements IStorage {
     const existing = await this.getSiteSettings();
     if (!existing) {
       const result = await db.insert(siteSettings).values(settings).returning();
-      return this.convertSiteSettingUrls(result[0]);
+      return result[0];
     }
     const result = await db
       .update(siteSettings)
       .set({ ...settings, updatedAt: new Date() })
       .where(eq(siteSettings.id, existing.id))
       .returning();
-    return this.convertSiteSettingUrls(result[0]);
+    return result[0];
   }
 }
 

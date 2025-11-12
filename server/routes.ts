@@ -356,7 +356,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     },
   });
 
-  // File upload endpoint with proper error handling - MODIFIED
+  // File upload endpoint with proper error handling
   app.post("/api/upload", (req, res) => {
     upload.single("file")(req, res, (err) => {
       if (err) {
@@ -378,10 +378,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "No file uploaded" });
       }
 
-      // MODIFIED: Return absolute URL instead of relative path
-      const baseUrl = process.env.RENDER_EXTERNAL_URL || `http://localhost:${process.env.PORT || 5000}`;
-      const fileUrl = `${baseUrl}/uploads/${req.file.filename}`;
-      
+      const fileUrl = `/uploads/${req.file.filename}`;
       return res.json({ url: fileUrl });
     });
   });
