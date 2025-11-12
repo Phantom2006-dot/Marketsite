@@ -14,70 +14,54 @@ export default function LoginPage() {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
-  // Hardcoded admin credentials (in a real app, this would be from a database)
-  const ADMIN_CREDENTIALS = {
-    username: "admin",
-    // This is the bcrypt hash for "Admin1234"
-    // You can generate new hashes at: https://bcrypt-generator.com/
-    passwordHash: "$2b$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi"
-  };
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
       // Validate credentials
-      if (username.trim().toLowerCase() !== ADMIN_CREDENTIALS.username) {
+      if (username.trim().toLowerCase() !== "admin") {
         toast({
           title: "Invalid credentials",
           description: "Username or password is incorrect",
           variant: "destructive"
         });
+        setIsLoading(false);
         return;
       }
 
-      // In a real app, you would send the credentials to your backend
-      // For now, we'll simulate the authentication
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ username, password }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        toast({
-          title: "Login successful",
-          description: "Welcome back, Admin!",
-        });
-        setLocation("/dashboard");
-      } else {
-        const error = await response.json();
-        toast({
-          title: "Login failed",
-          description: error.message || "Invalid username or password",
-          variant: "destructive"
-        });
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      // Fallback to client-side validation if API is not available
-      if (username.trim().toLowerCase() === "admin" && password === "Admin1234") {
-        toast({
-          title: "Login successful",
-          description: "Welcome back, Admin!",
-        });
-        setLocation("/dashboard");
-      } else {
+      if (password !== "Admin1234") {
         toast({
           title: "Invalid credentials",
-          description: "Username: admin, Password: Admin1234",
+          description: "Username or password is incorrect",
           variant: "destructive"
         });
+        setIsLoading(false);
+        return;
       }
+
+      // Simulate API call delay
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Successful login
+      toast({
+        title: "Login successful",
+        description: "Welcome back, Admin!",
+      });
+      
+      // Store login state (you might want to use context or localStorage in a real app)
+      localStorage.setItem("isAuthenticated", "true");
+      localStorage.setItem("user", JSON.stringify({ username: "admin", role: "admin" }));
+      
+      setLocation("/dashboard");
+      
+    } catch (error) {
+      console.error('Login error:', error);
+      toast({
+        title: "Login failed",
+        description: "An unexpected error occurred",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -108,6 +92,7 @@ export default function LoginPage() {
                   data-testid="input-username"
                   placeholder="Enter admin username"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -121,6 +106,7 @@ export default function LoginPage() {
                   data-testid="input-password"
                   placeholder="Enter admin password"
                   required
+                  disabled={isLoading}
                 />
               </div>
 
@@ -130,7 +116,14 @@ export default function LoginPage() {
                 data-testid="button-login"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Signing in...
+                  </>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
 
               {/* Demo credentials hint */}
