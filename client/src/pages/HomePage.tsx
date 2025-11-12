@@ -35,6 +35,18 @@ export default function HomePage() {
     queryKey: ["/api/hero-images"],
   });
 
+   // === ADD DEBUGGING CODE RIGHT HERE ===
+  console.log("=== DEBUG HERO IMAGE ===");
+  console.log("Full settings object:", settings);
+  console.log("heroImageUrl from settings:", settings?.heroImageUrl);
+  console.log("Type of heroImageUrl:", typeof settings?.heroImageUrl);
+  console.log("Is heroImageUrl truthy?", !!settings?.heroImageUrl);
+  console.log("Hero images API data:", heroImages);
+  console.log("Final heroImageUrls array:", heroImageUrls);
+  console.log("=========================");
+  // === END DEBUGGING CODE ===
+
+
   const storeName = settings?.storeName || "AL-MUSLIMAH CLOTHINGS & SHOES";
 
   // FIXED: Prioritize admin-set hero image over heroImages array
