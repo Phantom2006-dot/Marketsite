@@ -18,7 +18,7 @@ import {
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { insertSiteSettingSchema, type SiteSetting } from "@shared/schema";
-import { queryClient, apiRequest } from "@/lib/queryClient";
+import { queryClient } from "@/lib/queryClient";
 import { useToast } from "@/hooks/use-toast";
 import { X } from "lucide-react";
 
@@ -45,17 +45,25 @@ export default function AdminSettings() {
     },
   });
 
+  // Simple fetch-based mutation without apiRequest
   const updateMutation = useMutation({
     mutationFn: async (data: any) => {
       console.log('Updating settings with data:', data);
-      const res = await apiRequest("/api/settings", {
+      
+      const response = await fetch("/api/settings", {
         method: "PATCH",
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(data),
       });
-      return res.json();
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(errorText || `HTTP error! status: ${response.status}`);
+      }
+
+      return await response.json();
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["/api/settings"] });
@@ -68,9 +76,19 @@ export default function AdminSettings() {
     },
     onError: (error: any) => {
       console.error('Settings update error:', error);
+      
+      // Try to parse JSON error message
+      let errorMessage = error.message || "Failed to save settings";
+      try {
+        const errorData = JSON.parse(error.message);
+        errorMessage = errorData.message || errorMessage;
+      } catch {
+        // If not JSON, use the original message
+      }
+      
       toast({
         title: "Error updating settings",
-        description: error.message || "Failed to save settings",
+        description: errorMessage,
         variant: "destructive",
       });
     },
