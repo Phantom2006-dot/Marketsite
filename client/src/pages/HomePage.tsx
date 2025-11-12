@@ -218,13 +218,13 @@ export default function HomePage() {
             >
               <Link href="/categories">
                 <Button
-                  variant="default"
-                  size="lg"
-                  className="bg-white text-black hover:bg-white/90 px-8 py-3 text-lg font-semibold"
-                  data-testid="button-shop-now"
-                >
-                  Shop Collection
-                </Button>
+  variant="default"
+  size="lg"
+  className="bg-transparent text-white hover:bg-white/5 backdrop-blur-sm border border-white/50 shadow-[0_0_10px_#fff,0_0_20px_#fff,0_0_30px_#fff] hover:shadow-[0_0_15px_#fff,0_0_25px_#fff,0_0_35px_#fff] transition-all duration-300 px-8 py-3 text-lg font-semibold"
+  data-testid="button-shop-now"
+>
+  Shop Collection
+</Button>
               </Link>
               <Link href="/about">
                 <Button
