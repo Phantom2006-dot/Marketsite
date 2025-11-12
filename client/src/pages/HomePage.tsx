@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Facebook, Send, Mail, Phone, Clock } from "lucide-react";
-import ImageCarousel from "@/components/ImageCarousel";
+import { useState, useEffect } from "react"; // ADD THIS IMPORT
 import type { Category, Product, SiteSetting, HeroImage } from "@shared/schema";
 
 export default function HomePage() {
@@ -32,6 +32,9 @@ export default function HomePage() {
   const { data: heroImages, error: heroImagesError } = useQuery<HeroImage[]>({
     queryKey: ["/api/hero-images"],
   });
+
+  // ADD STATE FOR CURRENT SLIDE
+  const [currentSlide, setCurrentSlide] = useState(0);
 
   // Debug errors
   if (settingsError) {
@@ -65,12 +68,38 @@ export default function HomePage() {
       return urls;
     }
     
-    // Fallback
-    console.log("Using fallback hero image");
+    // Fallback: Use 3 default images for the slider
+    console.log("Using fallback hero images");
     return [
       "https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1583391733981-5afc8f5ca2f8?w=1200&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=1200&h=600&fit=crop",
     ];
   })();
+
+  // AUTO-SLIDE EFFECT - ADD THIS
+  useEffect(() => {
+    if (heroImageUrls.length > 1) {
+      const interval = setInterval(() => {
+        setCurrentSlide((prev) => (prev + 1) % heroImageUrls.length);
+      }, 3000); // Change slide every 3 seconds
+
+      return () => clearInterval(interval);
+    }
+  }, [heroImageUrls.length]);
+
+  // MANUAL SLIDE CONTROLS - ADD THIS
+  const nextSlide = () => {
+    setCurrentSlide((prev) => (prev + 1) % heroImageUrls.length);
+  };
+
+  const prevSlide = () => {
+    setCurrentSlide((prev) => (prev - 1 + heroImageUrls.length) % heroImageUrls.length);
+  };
+
+  const goToSlide = (index: number) => {
+    setCurrentSlide(index);
+  };
 
   // Prepare categories data for Navbar - handle undefined
   const navbarCategories = (categories || []).map((cat) => ({
@@ -95,23 +124,78 @@ export default function HomePage() {
       <Navbar categories={navbarCategories} isTransparent={true} />
 
       <main className="flex-1">
-        {/* Hero section with safe image handling */}
+        {/* STATIC HERO SECTION WITH AUTO-SLIDE - REPLACE THE ENTIRE HERO SECTION */}
         <section 
           className="relative h-[500px] md:h-[600px] flex items-center justify-center overflow-hidden"
           data-testid="hero-section"
         >
-          <ImageCarousel
-            images={heroImageUrls}
-            aspectRatio="h-[500px] md:h-[600px]"
-            className="absolute inset-0"
-            showControls={heroImageUrls.length > 1}
-            autoPlay={heroImageUrls.length > 1}
-            data-testid="hero-image-carousel"
-          />
+          {/* Hero Images Slider */}
+          <div className="absolute inset-0">
+            {heroImageUrls.map((url, index) => (
+              <div
+                key={index}
+                className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
+                  index === currentSlide ? 'opacity-100' : 'opacity-0'
+                }`}
+                style={{
+                  backgroundImage: `url(${url})`,
+                  backgroundSize: 'cover',
+                  backgroundPosition: 'center',
+                }}
+                data-testid={`hero-slide-${index}`}
+              />
+            ))}
+          </div>
+
+          {/* Overlay */}
           <div 
             className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60"
             data-testid="hero-overlay"
           />
+
+          {/* Navigation Arrows - Only show if multiple images */}
+          {heroImageUrls.length > 1 && (
+            <>
+              <button
+                onClick={prevSlide}
+                className="absolute left-4 z-20 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all"
+                data-testid="hero-prev-btn"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+                </svg>
+              </button>
+              <button
+                onClick={nextSlide}
+                className="absolute right-4 z-20 p-2 rounded-full bg-black/50 text-white hover:bg-black/70 transition-all"
+                data-testid="hero-next-btn"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </>
+          )}
+
+          {/* Slide Indicators - Only show if multiple images */}
+          {heroImageUrls.length > 1 && (
+            <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex space-x-2">
+              {heroImageUrls.map((_, index) => (
+                <button
+                  key={index}
+                  onClick={() => goToSlide(index)}
+                  className={`w-3 h-3 rounded-full transition-all ${
+                    index === currentSlide 
+                      ? 'bg-white scale-125' 
+                      : 'bg-white/50 hover:bg-white/70'
+                  }`}
+                  data-testid={`hero-indicator-${index}`}
+                />
+              ))}
+            </div>
+          )}
+
+          {/* Hero Content */}
           <div 
             className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto"
             data-testid="hero-content"
@@ -156,6 +240,7 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Rest of your component remains exactly the same */}
         {categoriesLoading ? (
           <section 
             className="container mx-auto px-4 py-16"
