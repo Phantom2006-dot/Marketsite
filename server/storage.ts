@@ -43,6 +43,7 @@ export interface IStorage {
 
   // Category image operations
   getCategoryImages(categoryId: number): Promise<CategoryImage[]>;
+  getCategoryImage(id: number): Promise<CategoryImage | undefined>;
   createCategoryImage(image: InsertCategoryImage): Promise<CategoryImage>;
   deleteCategoryImage(id: number): Promise<boolean>;
 
@@ -60,11 +61,13 @@ export interface IStorage {
 
   // Product image operations
   getProductImages(productId: number): Promise<ProductImage[]>;
+  getProductImage(id: number): Promise<ProductImage | undefined>;
   createProductImage(image: InsertProductImage): Promise<ProductImage>;
   deleteProductImage(id: number): Promise<boolean>;
 
   // Hero image operations
   getHeroImages(): Promise<HeroImage[]>;
+  getHeroImage(id: number): Promise<HeroImage | undefined>;
   createHeroImage(image: InsertHeroImage): Promise<HeroImage>;
   deleteHeroImage(id: number): Promise<boolean>;
 
@@ -192,6 +195,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(categoryImages.order);
   }
 
+  async getCategoryImage(id: number): Promise<CategoryImage | undefined> {
+    const result = await db
+      .select()
+      .from(categoryImages)
+      .where(eq(categoryImages.id, id));
+    return result[0];
+  }
+
   async createCategoryImage(
     image: InsertCategoryImage,
   ): Promise<CategoryImage> {
@@ -308,6 +319,14 @@ export class DatabaseStorage implements IStorage {
       .orderBy(productImages.order);
   }
 
+  async getProductImage(id: number): Promise<ProductImage | undefined> {
+    const result = await db
+      .select()
+      .from(productImages)
+      .where(eq(productImages.id, id));
+    return result[0];
+  }
+
   async createProductImage(image: InsertProductImage): Promise<ProductImage> {
     const result = await db.insert(productImages).values(image).returning();
     return result[0];
@@ -324,6 +343,14 @@ export class DatabaseStorage implements IStorage {
   // Hero image operations
   async getHeroImages(): Promise<HeroImage[]> {
     return db.select().from(heroImages).orderBy(heroImages.order);
+  }
+
+  async getHeroImage(id: number): Promise<HeroImage | undefined> {
+    const result = await db
+      .select()
+      .from(heroImages)
+      .where(eq(heroImages.id, id));
+    return result[0];
   }
 
   async createHeroImage(image: InsertHeroImage): Promise<HeroImage> {
