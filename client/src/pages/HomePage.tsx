@@ -591,7 +591,7 @@ export default function HomePage() {
                       className="text-sm"
                       data-testid="text-phone-number"
                     >
-                      {settings?.phone || "+234 XXX XXX XXXX"}
+                      {settings?.phone || "+2347016342022"}
                     </span>
                   </div>
                   <div 
