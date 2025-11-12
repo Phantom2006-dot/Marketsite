@@ -217,10 +217,10 @@ export default function HomePage() {
               data-testid="hero-buttons"
             >
               <Link href="/categories">
-                <Button
+              <Button
   variant="default"
   size="lg"
-  className="bg-transparent text-white hover:bg-white/5 backdrop-blur-sm border border-white/50 shadow-[0_0_10px_#fff,0_0_20px_#fff,0_0_30px_#fff] hover:shadow-[0_0_15px_#fff,0_0_25px_#fff,0_0_35px_#fff] transition-all duration-300 px-8 py-3 text-lg font-semibold"
+  className="bg-transparent text-white hover:bg-white/10 backdrop-blur-md border border-white/40 shadow-[0_0_20px_rgba(255,255,255,0.6)] hover:shadow-[0_0_30px_rgba(255,255,255,0.8)] transition-all duration-300 px-8 py-3 text-lg font-semibold"
   data-testid="button-shop-now"
 >
   Shop Collection
