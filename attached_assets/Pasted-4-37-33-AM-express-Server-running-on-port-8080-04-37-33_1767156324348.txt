@@ -1,0 +1,141 @@
+4:37:33 AM [express] 🚀 Server running on port 8080
+04:37:33
+4:37:33 AM [express] 🌐 Environment: production
+04:37:33
+4:37:33 AM [express] 🔄 Initializing database connection...
+04:37:33
+🔄 Initializing database schema...
+04:37:35
+❌ Database connection test failed: PostgresError: password authentication failed for user 'neondb_owner'
+04:37:35
+    at ErrorResponse (file:///app/node_modules/postgres/src/connection.js:794:26)
+04:37:35
+    at handle (file:///app/node_modules/postgres/src/connection.js:480:6)
+04:37:35
+    at TLSSocket.data (file:///app/node_modules/postgres/src/connection.js:315:9)
+04:37:35
+    at TLSSocket.emit (node:events:524:28)
+04:37:35
+    at addChunk (node:internal/streams/readable:561:12)
+04:37:35
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+04:37:35
+    at Readable.push (node:internal/streams/readable:392:5)
+04:37:35
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:191:23)
+04:37:35
+    at cachedError (file:///app/node_modules/postgres/src/query.js:170:23)
+04:37:35
+    at new Query (file:///app/node_modules/postgres/src/query.js:36:24)
+04:37:35
+    at sql (file:///app/node_modules/postgres/src/index.js:112:11)
+04:37:35
+    at testConnection (file:///app/dist/index.js:228:29) {
+04:37:35
+  severity_local: 'ERROR',
+04:37:35
+  code: '28P01'
+04:37:35
+}
+04:37:35
+❌ Database initialization failed: PostgresError: password authentication failed for user 'neondb_owner'
+04:37:35
+    at ErrorResponse (file:///app/node_modules/postgres/src/connection.js:794:26)
+04:37:35
+    at handle (file:///app/node_modules/postgres/src/connection.js:480:6)
+04:37:35
+    at TLSSocket.data (file:///app/node_modules/postgres/src/connection.js:315:9)
+04:37:35
+    at TLSSocket.emit (node:events:524:28)
+04:37:35
+    at addChunk (node:internal/streams/readable:561:12)
+04:37:35
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+04:37:35
+    at Readable.push (node:internal/streams/readable:392:5)
+04:37:35
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:191:23)
+04:37:35
+    at cachedError (file:///app/node_modules/postgres/src/query.js:170:23)
+04:37:35
+    at new Query (file:///app/node_modules/postgres/src/query.js:36:24)
+04:37:35
+    at sql (file:///app/node_modules/postgres/src/index.js:112:11)
+04:37:35
+    at testConnection (file:///app/dist/index.js:228:29) {
+04:37:35
+  severity_local: 'ERROR',
+04:37:35
+  code: '28P01'
+04:37:35
+}
+04:37:35
+4:37:35 AM [express] ⚠️ Database connection failed, but server is running:
+04:37:35
+PostgresError: password authentication failed for user 'neondb_owner'
+04:37:35
+    at ErrorResponse (file:///app/node_modules/postgres/src/connection.js:794:26)
+04:37:35
+    at handle (file:///app/node_modules/postgres/src/connection.js:480:6)
+04:37:35
+    at TLSSocket.data (file:///app/node_modules/postgres/src/connection.js:315:9)
+04:37:35
+    at TLSSocket.emit (node:events:524:28)
+04:37:35
+    at addChunk (node:internal/streams/readable:561:12)
+04:37:35
+    at readableAddChunkPushByteMode (node:internal/streams/readable:512:3)
+04:37:35
+    at Readable.push (node:internal/streams/readable:392:5)
+04:37:35
+    at TLSWrap.onStreamRead (node:internal/stream_base_commons:191:23)
+04:37:35
+    at cachedError (file:///app/node_modules/postgres/src/query.js:170:23)
+04:37:35
+    at new Query (file:///app/node_modules/postgres/src/query.js:36:24)
+04:37:35
+    at sql (file:///app/node_modules/postgres/src/index.js:112:11)
+04:37:35
+    at testConnection (file:///app/dist/index.js:228:29) {
+04:37:35
+  severity_local: 'ERROR',
+04:37:35
+  code: '28P01'
+04:37:35
+}
+04:37:54
+4:37:54 AM [express] GET /api/settings 500 in 1693ms :: {"message":"password authentication failed f…
+04:37:55
+4:37:55 AM [express] GET /api/categories 500 in 1721ms :: {"message":"password authentication failed…
+04:37:59
+4:37:59 AM [express] GET /api/categories 500 in 1684ms :: {"message":"password authentication failed…
+04:37:59
+4:37:59 AM [express] GET /api/hero-images 500 in 1692ms :: {"message":"password authentication faile…
+04:37:59
+4:37:59 AM [express] GET /api/settings 500 in 1719ms :: {"message":"password authentication failed f…
+04:37:59
+4:37:59 AM [express] GET /api/products 500 in 1753ms :: {"message":"password authentication failed f…
+04:38:17
+4:38:17 AM [express] GET /api/settings 500 in 1721ms :: {"message":"password authentication failed f…
+04:38:44
+4:38:44 AM [express] GET /api/products 500 in 1684ms :: {"message":"password authentication failed f…
+04:38:44
+4:38:44 AM [express] GET /api/categories 500 in 1689ms :: {"message":"password authentication failed…
+04:38:44
+4:38:44 AM [express] GET /api/settings 500 in 1722ms :: {"message":"password authentication failed f…
+04:38:54
+4:38:54 AM [express] GET /api/settings 500 in 1690ms :: {"message":"password authentication failed f…
+04:38:54
+4:38:54 AM [express] GET /api/categories 500 in 1723ms :: {"message":"password authentication failed…
+04:39:05
+4:39:05 AM [express] POST /api/categories 400 in 1716ms :: {"message":"password authentication faile…
+04:40:55
+4:40:55 AM [express] POST /api/categories 400 in 1686ms :: {"message":"password authentication faile…
+04:44:14
+App marketsite has excess capacity, autostopping machine d8d923eb0e3d28. 0 out of 1 machines left running (region=jnb, process group=app)
+04:44:14
+ INFO Sending signal SIGINT to main child process w/ PID 642
+04:44:15
+ INFO Main child exited with signal (with signal 'SIGINT', core dumped? false)
+04:44:15
+ INFO Starting clean up.
