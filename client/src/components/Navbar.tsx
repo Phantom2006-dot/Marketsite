@@ -1,13 +1,14 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { ShoppingBag, Menu, X, ChevronDown } from "lucide-react";
-import { useState, useEffect, useCallback } from "react";
+import { Menu, X, ChevronDown } from "lucide-react";
+import { useState, useEffect } from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import logoUrl from "@assets/logo_1767176985719.jpg";
 
 interface NavbarProps {
   categories?: Array<{ name: string; slug: string }>;
@@ -22,7 +23,6 @@ export default function Navbar({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
-  // Fixed useEffect with proper dependency and cleanup
   useEffect(() => {
     const handleScroll = () => {
       const isScrolled = window.scrollY > 20;
@@ -31,7 +31,6 @@ export default function Navbar({
       }
     };
 
-    // Use requestAnimationFrame for better performance
     let ticking = false;
     const updateScroll = () => {
       handleScroll();
@@ -47,7 +46,7 @@ export default function Navbar({
 
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [scrolled]); // Add scrolled as dependency
+  }, [scrolled]);
 
   const isActive = (path: string) => location === path;
   const navBg =
@@ -64,9 +63,9 @@ export default function Navbar({
               className="flex items-center gap-2 cursor-pointer"
               data-testid="link-home"
             >
-              <ShoppingBag className="h-6 w-6 text-primary" />
-              <span className="font-['DM_Sans'] font-bold text-xl">
-                AL-MUSLIMAH CLOTHINGS & SHOES
+              <img src={logoUrl} alt="Al-Muslimah Logo" className="h-10 w-auto rounded-sm" />
+              <span className="font-['DM_Sans'] font-bold text-xl hidden sm:inline">
+                AL-MUSLIMAH
               </span>
             </div>
           </Link>
