@@ -19,7 +19,7 @@ interface NavbarProps {
 export default function Navbar({
   categories = [],
   isTransparent = false,
-  logoUrl = "/logo1.png",  // FIXED: lowercase and forward slash
+  logoUrl = "/logo.jpg",  // FIXED: updated to logo.jpg
   logoAlt = "AL-MUSLIMAH Logo",  // Default alt text
 }: NavbarProps) {
   const [location] = useLocation();
