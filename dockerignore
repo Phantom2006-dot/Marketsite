@@ -1,0 +1,7 @@
+node_modules
+dist
+.git
+.env
+*.zip
+/home/ubuntu/Marketsite-main/Marketsite-main/attached_assets
+/home/ubuntu/Marketsite-main/Marketsite-main/public/uploads
