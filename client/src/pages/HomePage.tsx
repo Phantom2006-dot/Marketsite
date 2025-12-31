@@ -54,27 +54,22 @@ export default function HomePage() {
     const baseUrl = window.location.origin;
     const staticImages = [grandOpeningImg, logoBannerImg];
     
-    // Priority 1: Settings heroImageUrl (convert to absolute if relative)
+    // Get dynamic images
+    let dynamicUrls: string[] = [];
     if (settings?.heroImageUrl) {
-      const absoluteUrl = settings.heroImageUrl.startsWith('http') 
+      dynamicUrls.push(settings.heroImageUrl.startsWith('http') 
         ? settings.heroImageUrl 
-        : `${baseUrl}${settings.heroImageUrl}`;
-      return [absoluteUrl, ...staticImages];
-    }
-    
-    // Priority 2: Hero images from API (convert URLs)
-    if (heroImages && heroImages.length > 0) {
-      const urls = heroImages.map((img) => 
+        : `${baseUrl}${settings.heroImageUrl}`);
+    } else if (heroImages && heroImages.length > 0) {
+      dynamicUrls = heroImages.map((img) => 
         img.url.startsWith('http') ? img.url : `${baseUrl}${img.url}`
       );
-      return [...urls, ...staticImages];
+    } else {
+      dynamicUrls = ["https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop"];
     }
     
-    // Fallback: Use dynamic images + static ones
-    return [
-      "https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop",
-      ...staticImages
-    ];
+    // Combine all images into one flat array for the carousel
+    return [...dynamicUrls, ...staticImages];
   })();
 
   // AUTO-SLIDE EFFECT - ADD THIS
@@ -141,7 +136,7 @@ export default function HomePage() {
                   backgroundImage: `url(${url})`,
                   backgroundSize: index === 0 ? 'cover' : 'contain',
                   backgroundPosition: 'center',
-                  backgroundColor: index === 0 ? 'transparent' : '#0a192f'
+                  backgroundColor: '#0a192f'
                 }}
                 data-testid={`hero-slide-${index}`}
               />
