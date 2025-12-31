@@ -138,12 +138,6 @@ export default function Navbar({
                 Contact Us
               </Button>
             </Link>
-
-            <Link href="/login">
-              <Button variant="ghost" data-testid="link-login">
-                Admin
-              </Button>
-            </Link>
           </div>
 
           <div className="md:hidden">
@@ -216,17 +210,6 @@ export default function Navbar({
                 data-testid="link-mobile-contact"
               >
                 Contact Us
-              </Button>
-            </Link>
-
-            <Link href="/login">
-              <Button
-                variant="ghost"
-                className="w-full justify-start"
-                onClick={() => setMobileMenuOpen(false)}
-                data-testid="link-mobile-admin"
-              >
-                Admin
               </Button>
             </Link>
           </div>

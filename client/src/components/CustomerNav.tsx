@@ -57,11 +57,6 @@ export function CustomerNav() {
                 </Button>
               </Link>
             ))}
-            <Link href="/login">
-              <Button variant="ghost" size="sm" data-testid="link-admin">
-                Admin
-              </Button>
-            </Link>
             <ThemeToggle />
           </div>
 
@@ -107,16 +102,6 @@ export function CustomerNav() {
                   </Button>
                 </Link>
               ))}
-              <Link href="/login">
-                <Button
-                  variant="ghost"
-                  className="w-full justify-start"
-                  onClick={() => setIsMobileMenuOpen(false)}
-                  data-testid="link-admin-mobile"
-                >
-                  Admin Login
-                </Button>
-              </Link>
             </div>
           </div>
         )}

@@ -30,7 +30,8 @@ export default function LoginPage() {
         return;
       }
 
-      if (password !== "Admin1234") {
+      const adminPassword = import.meta.env.VITE_ADMIN_PASSWORD || "Admin1234";
+      if (password !== adminPassword) {
         toast({
           title: "Invalid credentials",
           description: "Username or password is incorrect",
