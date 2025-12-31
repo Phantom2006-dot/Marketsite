@@ -4,17 +4,11 @@ import { eq } from "drizzle-orm";
 import bcrypt from "bcrypt";
 
 async function seed() {
-  console.log("🌱 Starting database seed...");
-  console.log("===========================");
+  console.log("Starting database seed...");
 
   try {
-    // First test connection
-    console.log("🔄 Testing database connection...");
-    await db.execute(`SELECT 1`);
-    console.log("✅ Database connection successful");
-
     // Create admin user (password: admin123)
-    console.log("\n👤 Creating admin user...");
+    console.log("Creating admin user...");
     const hashedPassword = await bcrypt.hash("admin123", 10);
     
     // Check if admin already exists
@@ -43,7 +37,7 @@ async function seed() {
     }
 
     // Create categories
-    console.log("\n📁 Creating categories...");
+    console.log("Creating categories...");
     const categoryData = [
       {
         name: "Hijabs & Veils",
@@ -84,7 +78,7 @@ async function seed() {
     console.log(`✓ ${createdCategories.length} categories created`);
 
     // Create products
-    console.log("\n📦 Creating products...");
+    console.log("Creating products...");
     const productData = [
       {
         name: "Premium Cotton Hijab",
@@ -186,7 +180,7 @@ async function seed() {
     console.log(`✓ ${createdProducts.length} products created`);
 
     // Ensure site settings exist
-    console.log("\n⚙️  Checking site settings...");
+    console.log("Checking site settings...");
     const existingSettings = await db.select().from(siteSettings).limit(1);
     if (existingSettings.length === 0) {
       await db.insert(siteSettings).values({});
@@ -195,38 +189,14 @@ async function seed() {
       console.log("✓ Site settings already exist");
     }
 
-    console.log("\n=================================");
-    console.log("✅ Database seeded successfully!");
-    console.log("=================================");
-    console.log("\n🔑 You can now login to the admin panel with:");
-    console.log("   Username: admin");
-    console.log("   Password: admin123");
-    console.log("\n📊 Summary:");
-    console.log(`   👤 Users: 1 (admin)`);
-    console.log(`   📁 Categories: ${createdCategories.length}`);
-    console.log(`   📦 Products: ${createdProducts.length}`);
+    console.log("\n✅ Database seeded successfully!");
+    console.log("\nYou can now login to the admin panel with:");
+    console.log("Username: admin");
+    console.log("Password: admin123");
     
-  } catch (error: any) {
-    console.error("\n❌ Seed failed!");
-    console.error("   Error:", error.message);
-    
-    if (error.code === '28P01') {
-      console.error("\n🔑 AUTHENTICATION ERROR:");
-      console.error("   Your database credentials are incorrect.");
-      console.error("   Check your DATABASE_URL environment variable.");
-      console.error("   Make sure the username and password are correct.");
-    } else if (error.code === '3D000') {
-      console.error("\n🗄️ DATABASE ERROR:");
-      console.error("   The database doesn't exist.");
-      console.error("   Create the database in your Neon/Render dashboard.");
-    } else if (error.code === 'ECONNREFUSED') {
-      console.error("\n🌐 CONNECTION ERROR:");
-      console.error("   Could not connect to the database.");
-      console.error("   Check if the database server is running.");
-      console.error("   Verify your DATABASE_URL hostname and port.");
-    }
-    
-    process.exit(1);
+  } catch (error) {
+    console.error("Error seeding database:", error);
+    throw error;
   }
 }
 

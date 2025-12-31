@@ -16,9 +16,6 @@ import { MapPin, Facebook, Send, Mail, Phone, Clock } from "lucide-react";
 import { useState, useEffect } from "react"; // ADD THIS IMPORT
 import type { Category, Product, SiteSetting, HeroImage } from "@shared/schema";
 
-import grandOpeningImg from "@/assets/hero/grand-opening.jpg";
-import logoBannerImg from "@/assets/hero/logo-banner.png";
-
 export default function HomePage() {
   const { data: settings, isLoading: settingsLoading, error: settingsError } = useQuery<SiteSetting>({
     queryKey: ["/api/settings"],
@@ -49,27 +46,35 @@ export default function HomePage() {
 
   const storeName = settings?.storeName || "AL-MUSLIMAH CLOTHINGS & SHOES";
 
-  // FIXED: Handle relative URLs and include static images
+  // FIXED: Handle relative URLs and undefined data
   const heroImageUrls = (() => {
     const baseUrl = window.location.origin;
-    const staticImages = [grandOpeningImg, logoBannerImg];
     
-    // Get dynamic images
-    let dynamicUrls: string[] = [];
+    // Priority 1: Settings heroImageUrl (convert to absolute if relative)
     if (settings?.heroImageUrl) {
-      dynamicUrls.push(settings.heroImageUrl.startsWith('http') 
+      const absoluteUrl = settings.heroImageUrl.startsWith('http') 
         ? settings.heroImageUrl 
-        : `${baseUrl}${settings.heroImageUrl}`);
-    } else if (heroImages && heroImages.length > 0) {
-      dynamicUrls = heroImages.map((img) => 
-        img.url.startsWith('http') ? img.url : `${baseUrl}${img.url}`
-      );
-    } else {
-      dynamicUrls = ["https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop"];
+        : `${baseUrl}${settings.heroImageUrl}`;
+      console.log("Using hero image:", absoluteUrl);
+      return [absoluteUrl];
     }
     
-    // Combine all images into one flat array for the carousel
-    return [...dynamicUrls, ...staticImages];
+    // Priority 2: Hero images from API (convert URLs)
+    if (heroImages && heroImages.length > 0) {
+      const urls = heroImages.map((img) => 
+        img.url.startsWith('http') ? img.url : `${baseUrl}${img.url}`
+      );
+      console.log("Using hero images:", urls);
+      return urls;
+    }
+    
+    // Fallback: Use 3 default images for the slider
+    console.log("Using fallback hero images");
+    return [
+      "https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1583391733981-5afc8f5ca2f8?w=1200&h=600&fit=crop",
+      "https://images.unsplash.com/photo-1434389677669-e08b4cac3105?w=1200&h=600&fit=crop",
+    ];
   })();
 
   // AUTO-SLIDE EFFECT - ADD THIS
@@ -134,9 +139,8 @@ export default function HomePage() {
                 }`}
                 style={{
                   backgroundImage: `url(${url})`,
-                  backgroundSize: index === 0 ? 'cover' : 'contain',
+                  backgroundSize: 'cover',
                   backgroundPosition: 'center',
-                  backgroundColor: '#0a192f'
                 }}
                 data-testid={`hero-slide-${index}`}
               />

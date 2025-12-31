@@ -70,26 +70,22 @@ app.use((req, res, next) => {
     }
 
     const port = parseInt(process.env.PORT || '5000', 10);
-    
-    // Initialize database BEFORE starting server
-    log("🔄 Initializing database connection...");
-    const dbConnected = await initializeDatabase();
-    
-    if (dbConnected) {
-      log("✅ Database connected successfully");
-    } else {
-      log("⚠️ Database connection failed, but server is running");
-      log("⚠️ Some features may not work properly");
-    }
-    
     server.listen({
       port,
       host: "0.0.0.0",
       reusePort: true,
-    }, () => {
+    }, async () => {
       log(`🚀 Server running on port ${port}`);
       log(`🌐 Environment: ${app.get("env")}`);
-      log(`💾 Database: ${dbConnected ? 'Connected ✅' : 'Not connected ⚠️'}`);
+
+      try {
+        log("🔄 Initializing database connection...");
+        await initializeDatabase();
+        log("✅ Database connected successfully");
+      } catch (dbError) {
+        log("⚠️ Database connection failed, but server is running:");
+        console.error(dbError);
+      }
     });
 
   } catch (error) {
