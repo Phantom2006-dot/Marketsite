@@ -23,8 +23,8 @@ const connectionString = getDatabaseUrl();
 console.log('🔗 Using database:', connectionString.split('@')[1]); // Log only the host for security
 
 export const sql = postgres(connectionString, {
-  // SSL is required for Render PostgreSQL
-  ssl: process.env.NODE_ENV === 'production' ? 'require' : false,
+  // SSL is required for Neon/Render PostgreSQL
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : (connectionString.includes('neon.tech') ? { rejectUnauthorized: false } : false),
   // Connection pool settings
   max: 20,
   idle_timeout: 30,
