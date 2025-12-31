@@ -3,11 +3,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://marketsite-backend.fly.dev/api/:path*"
+      "destination": "https://marketsite.fly.dev/api/:path*"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "https://marketsite-backend.fly.dev/uploads/:path*"
+      "destination": "https://marketsite.fly.dev/uploads/:path*"
     },
     {
       "source": "/(.*)",
