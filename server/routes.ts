@@ -15,6 +15,11 @@ import fs from "fs";
 import { cloudinary } from "./lib/cloudinary";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Health check route for deployment platforms
+  app.get("/health", (_req, res) => {
+    res.json({ status: "ok", timestamp: new Date().toISOString() });
+  });
+
   // Category routes
   app.get("/api/categories", async (_req, res) => {
     try {
