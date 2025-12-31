@@ -24,8 +24,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   ];
 
   const handleLogout = () => {
-    console.log('Logging out...');
-    setLocation("/login");
+    console.log('Admin session closed');
+    setLocation("/");
   };
 
   return (
