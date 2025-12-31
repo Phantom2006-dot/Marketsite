@@ -1,0 +1,17 @@
+{
+  "version": 2,
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "https://marketsite-backend.fly.dev/api/:path*"
+    },
+    {
+      "source": "/uploads/:path*",
+      "destination": "https://marketsite-backend.fly.dev/uploads/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}
