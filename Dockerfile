@@ -30,4 +30,5 @@ ENV PORT=8080
 EXPOSE 8080
 
 # Start the application
-CMD ["node", "dist/index.cjs"]
+# Build output is index.js not index.cjs based on package.json start script
+CMD ["node", "dist/index.js"]

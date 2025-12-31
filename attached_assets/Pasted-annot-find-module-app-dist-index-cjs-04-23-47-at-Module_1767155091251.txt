@@ -1,0 +1,79 @@
+annot find module '/app/dist/index.cjs'
+04:23:47
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+04:23:47
+    at Module._load (node:internal/modules/cjs/loader:1038:27)
+04:23:47
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+04:23:47
+    at node:internal/main/run_main_module:28:49 {
+04:23:47
+  code: 'MODULE_NOT_FOUND',
+04:23:47
+  requireStack: []
+04:23:47
+}
+04:23:47
+Node.js v20.19.6
+04:23:47
+2025/12/31 04:23:47 INFO SSH listening listen_address=[fdaa:39:4154:a7b:2e3:66f3:c842:2]:22
+04:23:48
+ INFO Main child exited normally with code: 1
+04:23:48
+ INFO Starting clean up.
+04:23:48
+[    2.149019] reboot: Restarting system
+04:23:48
+2025-12-31T04:23:48.849762522 [01KDSAAC3FBSQ09WH3DNDM3KD6:main] Running Firecracker v1.12.1
+04:23:48
+2025-12-31T04:23:48.849939005 [01KDSAAC3FBSQ09WH3DNDM3KD6:main] Listening on API socket ("/fc.sock").
+04:23:49
+2025-12-31T04:23:49.669581382 [01KDSAAC2T9X4TXFS484HHJAKG:main] Running Firecracker v1.12.1
+04:23:49
+2025-12-31T04:23:49.669720395 [01KDSAAC2T9X4TXFS484HHJAKG:main] Listening on API socket ("/fc.sock").
+04:23:49
+ INFO Starting init (commit: 6f59af0a)...
+04:23:49
+ INFO starting statics vsock server
+04:23:49
+ INFO Preparing to run: `docker-entrypoint.sh node dist/index.cjs` as root
+04:23:49
+ INFO [fly api proxy] listening at /.fly/api
+04:23:50
+node:internal/modules/cjs/loader:1210
+04:23:50
+  throw err;
+04:23:50
+  ^
+04:23:50
+Error: Cannot find module '/app/dist/index.cjs'
+04:23:50
+    at Module._resolveFilename (node:internal/modules/cjs/loader:1207:15)
+04:23:50
+    at Module._load (node:internal/modules/cjs/loader:1038:27)
+04:23:50
+    at Function.executeUserEntryPoint [as runMain] (node:internal/modules/run_main:164:12)
+04:23:50
+    at node:internal/main/run_main_module:28:49 {
+04:23:50
+  code: 'MODULE_NOT_FOUND',
+04:23:50
+  requireStack: []
+04:23:50
+}
+04:23:50
+Node.js v20.19.6
+04:23:50
+Machine started in 1.396s
+04:23:50
+2025/12/31 04:23:50 INFO SSH listening listen_address=[fdaa:39:4154:a7b:1cf:c886:9301:2]:22
+04:23:50
+ INFO Starting init (commit: 6f59af0a)...
+04:23:50
+ INFO starting statics vsock server
+04:23:50
+ INFO Preparing to run: `docker-entrypoint.sh node dist/index.cjs` as root
+04:23:50
+ INFO [fly api proxy] listening at /.fly/api
+04:23:50
+Machine started in 1.261s
