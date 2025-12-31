@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useLocation } from "wouter";
-import { Menu, X, ShoppingBag, ArrowLeft } from "lucide-react";
+import { Menu, X, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useQuery } from "@tanstack/react-query";
@@ -44,7 +44,11 @@ export function CustomerNav() {
             )}
             
             <Link href="/" className="flex items-center gap-2">
-              <ShoppingBag className="w-6 h-6" />
+              <img 
+                src="/logo.jpg"
+                alt="AL-MUSLIMAH Logo"
+                className="h-8 w-8 rounded-full object-cover border border-primary/20"
+              />
               <span className="font-bold text-sm md:text-base">{storeName}</span>
             </Link>
           </div>
