@@ -12,11 +12,15 @@ import {
 interface NavbarProps {
   categories?: Array<{ name: string; slug: string }>;
   isTransparent?: boolean;
+  logoUrl?: string;  // New prop
+  logoAlt?: string;  // New prop
 }
 
 export default function Navbar({
   categories = [],
   isTransparent = false,
+  logoUrl = "/logo.png",  // Default logo path
+  logoAlt = "AL-MUSLIMAH Logo",  // Default alt text
 }: NavbarProps) {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -47,7 +51,7 @@ export default function Navbar({
 
     window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
-  }, [scrolled]); // Add scrolled as dependency
+  }, [scrolled]);
 
   const isActive = (path: string) => location === path;
   const navBg =
@@ -59,15 +63,28 @@ export default function Navbar({
     <nav className={`sticky top-0 z-40 transition-all ${navBg}`}>
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
+          {/* Logo Section - Updated */}
           <Link href="/">
             <div
-              className="flex items-center gap-2 cursor-pointer"
+              className="flex items-center gap-3 cursor-pointer"
               data-testid="link-home"
             >
-              <ShoppingBag className="h-6 w-6 text-primary" />
-              <span className="font-['DM_Sans'] font-bold text-xl">
-                AL-MUSLIMAH CLOTHINGS & SHOES
-              </span>
+              {/* Logo Image */}
+              <img 
+                src={logoUrl}
+                alt={logoAlt}
+                className="h-10 w-10 rounded-full object-cover border-2 border-primary/20 shadow-sm"
+              />
+              
+              {/* Text with improved layout */}
+              <div className="flex flex-col">
+                <span className="font-['DM_Sans'] font-bold text-xl leading-tight">
+                  AL-MUSLIMAH
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  Clothings & Shoes
+                </span>
+              </div>
             </div>
           </Link>
 
