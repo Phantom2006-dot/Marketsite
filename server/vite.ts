@@ -4,10 +4,7 @@ import path from "path";
 import { type Server } from "http";
 import type { ViteDevServer } from "vite";
 import { nanoid } from "nanoid";
-import { nanoid } from "nanoid";
 import { fileURLToPath } from 'url';
-
-const viteLogger = createLogger();
 
 // ES module compatible __dirname equivalent
 const __filename = fileURLToPath(import.meta.url);
