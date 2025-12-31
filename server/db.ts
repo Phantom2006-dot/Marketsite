@@ -26,9 +26,10 @@ export const sql = postgres(connectionString, {
   // SSL is required for Neon/Render PostgreSQL
   ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : (connectionString.includes('neon.tech') ? { rejectUnauthorized: false } : false),
   // Connection pool settings
-  max: 20,
-  idle_timeout: 30,
-  connect_timeout: 10,
+  max: 10,
+  idle_timeout: 20,
+  connect_timeout: 30,
+  prepare: false, // Required for Neon pooler
 });
 
 // Simple connection test
