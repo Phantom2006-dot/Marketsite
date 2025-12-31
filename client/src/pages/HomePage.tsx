@@ -13,11 +13,11 @@ import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Facebook, Send, Mail, Phone, Clock } from "lucide-react";
-import { useState, useEffect } from "react";
+import { useState, useEffect } from "react"; // ADD THIS IMPORT
 import type { Category, Product, SiteSetting, HeroImage } from "@shared/schema";
-import logoUrl from "@assets/logo_1767176985719.jpg";
-import carousel1 from "@assets/download_1767177012504.jpg";
-import carousel2 from "@assets/Gemini_Generated_Image_ibal4qibal4qibal_1767177022987.png";
+
+import grandOpeningImg from "@/assets/hero/grand-opening.jpg";
+import logoBannerImg from "@/assets/hero/logo-banner.png";
 
 export default function HomePage() {
   const { data: settings, isLoading: settingsLoading, error: settingsError } = useQuery<SiteSetting>({
@@ -36,22 +36,54 @@ export default function HomePage() {
     queryKey: ["/api/hero-images"],
   });
 
+  // ADD STATE FOR CURRENT SLIDE
   const [currentSlide, setCurrentSlide] = useState(0);
+
+  // Debug errors
+  if (settingsError) {
+    console.error("Settings API error:", settingsError);
+  }
+  if (heroImagesError) {
+    console.error("Hero images API error:", heroImagesError);
+  }
 
   const storeName = settings?.storeName || "AL-MUSLIMAH CLOTHINGS & SHOES";
 
-  const heroImageUrls = [carousel1, carousel2];
+  // FIXED: Handle relative URLs and include static images
+  const heroImageUrls = (() => {
+    const baseUrl = window.location.origin;
+    const staticImages = [grandOpeningImg, logoBannerImg];
+    
+    // Get dynamic images
+    let dynamicUrls: string[] = [];
+    if (settings?.heroImageUrl) {
+      dynamicUrls.push(settings.heroImageUrl.startsWith('http') 
+        ? settings.heroImageUrl 
+        : `${baseUrl}${settings.heroImageUrl}`);
+    } else if (heroImages && heroImages.length > 0) {
+      dynamicUrls = heroImages.map((img) => 
+        img.url.startsWith('http') ? img.url : `${baseUrl}${img.url}`
+      );
+    } else {
+      dynamicUrls = ["https://images.unsplash.com/photo-1558769132-cb1aea174970?w=1200&h=600&fit=crop"];
+    }
+    
+    // Combine all images into one flat array for the carousel
+    return [...dynamicUrls, ...staticImages];
+  })();
 
+  // AUTO-SLIDE EFFECT - ADD THIS
   useEffect(() => {
     if (heroImageUrls.length > 1) {
       const interval = setInterval(() => {
         setCurrentSlide((prev) => (prev + 1) % heroImageUrls.length);
-      }, 5000);
+      }, 3000); // Change slide every 3 seconds
 
       return () => clearInterval(interval);
     }
   }, [heroImageUrls.length]);
 
+  // MANUAL SLIDE CONTROLS - ADD THIS
   const nextSlide = () => {
     setCurrentSlide((prev) => (prev + 1) % heroImageUrls.length);
   };
@@ -64,11 +96,13 @@ export default function HomePage() {
     setCurrentSlide(index);
   };
 
+  // Prepare categories data for Navbar - handle undefined
   const navbarCategories = (categories || []).map((cat) => ({
     name: cat.name,
     slug: cat.slug,
   }));
 
+  // Show loading state if critical data is loading
   if (settingsLoading && categoriesLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -85,10 +119,12 @@ export default function HomePage() {
       <Navbar categories={navbarCategories} isTransparent={true} />
 
       <main className="flex-1">
+        {/* STATIC HERO SECTION WITH AUTO-SLIDE - REPLACE THE ENTIRE HERO SECTION */}
         <section 
           className="relative h-[500px] md:h-[600px] flex items-center justify-center overflow-hidden"
           data-testid="hero-section"
         >
+          {/* Hero Images Slider */}
           <div className="absolute inset-0">
             {heroImageUrls.map((url, index) => (
               <div
@@ -98,19 +134,22 @@ export default function HomePage() {
                 }`}
                 style={{
                   backgroundImage: `url(${url})`,
-                  backgroundSize: 'cover',
+                  backgroundSize: index === 0 ? 'cover' : 'contain',
                   backgroundPosition: 'center',
+                  backgroundColor: '#0a192f'
                 }}
                 data-testid={`hero-slide-${index}`}
               />
             ))}
           </div>
 
+          {/* Overlay */}
           <div 
             className="absolute inset-0 bg-gradient-to-b from-black/50 via-black/30 to-black/60"
             data-testid="hero-overlay"
           />
 
+          {/* Navigation Arrows - Only show if multiple images */}
           {heroImageUrls.length > 1 && (
             <>
               <button
@@ -134,6 +173,7 @@ export default function HomePage() {
             </>
           )}
 
+          {/* Slide Indicators - Only show if multiple images */}
           {heroImageUrls.length > 1 && (
             <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 z-20 flex space-x-2">
               {heroImageUrls.map((_, index) => (
@@ -151,6 +191,7 @@ export default function HomePage() {
             </div>
           )}
 
+          {/* Hero Content */}
           <div 
             className="relative z-10 text-center text-white px-4 max-w-4xl mx-auto"
             data-testid="hero-content"
@@ -172,14 +213,14 @@ export default function HomePage() {
               data-testid="hero-buttons"
             >
               <Link href="/categories">
-                <Button
-                  variant="default"
-                  size="lg"
-                  className="bg-transparent text-white hover:bg-white/10 backdrop-blur-md border border-white/40 shadow-[0_0_20px_rgba(255,255,255,0.6)] hover:shadow-[0_0_30px_rgba(255,255,255,0.8)] transition-all duration-300 px-8 py-3 text-lg font-semibold"
-                  data-testid="button-shop-now"
-                >
-                  Shop Collection
-                </Button>
+              <Button
+  variant="default"
+  size="lg"
+  className="bg-transparent text-white hover:bg-white/10 backdrop-blur-md border border-white/40 shadow-[0_0_20px_rgba(255,255,255,0.6)] hover:shadow-[0_0_30px_rgba(255,255,255,0.8)] transition-all duration-300 px-8 py-3 text-lg font-semibold"
+  data-testid="button-shop-now"
+>
+  Shop Collection
+</Button>
               </Link>
               <Link href="/about">
                 <Button
@@ -195,6 +236,7 @@ export default function HomePage() {
           </div>
         </section>
 
+        {/* Rest of your component remains exactly the same */}
         {categoriesLoading ? (
           <section 
             className="container mx-auto px-4 py-16"
@@ -444,6 +486,7 @@ export default function HomePage() {
           </section>
         )}
 
+        {/* Professional Contact Section */}
         <section 
           className="py-16 bg-gradient-to-br from-primary to-primary/90 text-primary-foreground"
           data-testid="contact-section"
@@ -472,6 +515,7 @@ export default function HomePage() {
               className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto"
               data-testid="contact-grid"
             >
+              {/* Store Locations */}
               <Card 
                 className="bg-white/10 backdrop-blur-sm border-white/20"
                 data-testid="card-locations"
@@ -519,6 +563,7 @@ export default function HomePage() {
                 </CardContent>
               </Card>
 
+              {/* Contact Information */}
               <Card 
                 className="bg-white/10 backdrop-blur-sm border-white/20"
                 data-testid="card-contact-info"
@@ -566,65 +611,129 @@ export default function HomePage() {
                       className="text-sm"
                       data-testid="text-business-hours"
                     >
-                      {settings?.hours || "Mon-Sat: 9am - 8pm"}
+                      {settings?.hours || "Mon-Sat: 9AM-6PM"}
                     </span>
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Social Media */}
               <Card 
                 className="bg-white/10 backdrop-blur-sm border-white/20"
-                data-testid="card-social"
+                data-testid="card-social-media"
               >
                 <CardHeader>
                   <CardTitle 
                     className="flex items-center gap-2 text-white"
-                    data-testid="text-social-title"
+                    data-testid="text-social-media-title"
                   >
                     <Send className="w-5 h-5" />
-                    Connect With Us
+                    Follow Us
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="flex gap-4">
-                  <a 
-                    href={settings?.facebook || "#"} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-                    data-testid="link-social-facebook"
-                  >
-                    <Facebook className="w-5 h-5" />
-                  </a>
-                  <a 
-                    href={`https://wa.me/${settings?.whatsapp || "2347016342022"}`} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="p-2 bg-white/10 rounded-full hover:bg-white/20 transition-colors"
-                    data-testid="link-social-whatsapp"
-                  >
-                    <Phone className="w-5 h-5" />
-                  </a>
+                <CardContent className="space-y-3">
+                  {settings?.telegram && (
+                    <Button
+                      variant="secondary"
+                      className="w-full justify-start gap-2 bg-white/20 hover:bg-white/30 border-white/30"
+                      onClick={() =>
+                        window.open(
+                          `https://t.me/${settings.telegram.replace(/\D/g, "")}`,
+                          "_blank",
+                        )
+                      }
+                      data-testid="button-telegram"
+                    >
+                      <Send className="w-4 h-4" />
+                      Telegram
+                    </Button>
+                  )}
+                  {settings?.facebook && (
+                    <Button
+                      variant="secondary"
+                      className="w-full justify-start gap-2 bg-white/20 hover:bg-white/30 border-white/30"
+                      onClick={() => window.open(settings.facebook, "_blank")}
+                      data-testid="button-facebook"
+                    >
+                      <Facebook className="w-4 h-4" />
+                      Facebook
+                    </Button>
+                  )}
                 </CardContent>
               </Card>
 
-              <div className="flex flex-col justify-center">
-                <Button 
-                  className="bg-white text-primary hover:bg-white/90 font-bold py-6 text-lg"
-                  onClick={() => window.open(`https://wa.me/${settings?.whatsapp || "2347016342022"}`, '_blank')}
-                  data-testid="button-chat-whatsapp"
-                >
-                  Chat on WhatsApp
-                </Button>
-              </div>
+              {/* Quick Actions */}
+              <Card 
+                className="bg-white/10 backdrop-blur-sm border-white/20"
+                data-testid="card-quick-links"
+              >
+                <CardHeader>
+                  <CardTitle 
+                    className="text-white"
+                    data-testid="text-quick-links-title"
+                  >
+                    Quick Links
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  <Link href="/categories">
+                    <Button
+                      variant="secondary"
+                      className="w-full justify-start bg-white/20 hover:bg-white/30 border-white/30"
+                      data-testid="button-browse-categories"
+                    >
+                      Browse All Categories
+                    </Button>
+                  </Link>
+                  <Link href="/contact">
+                    <Button
+                      variant="secondary"
+                      className="w-full justify-start bg-white/20 hover:bg-white/30 border-white/30"
+                      data-testid="button-send-message"
+                    >
+                      Send Message
+                    </Button>
+                  </Link>
+                  <Link href="/about">
+                    <Button
+                      variant="secondary"
+                      className="w-full justify-start bg-white/20 hover:bg-white/30 border-white/30"
+                      data-testid="button-about-us"
+                    >
+                      About Us
+                    </Button>
+                  </Link>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="bg-muted py-8 text-center text-muted-foreground border-t">
-        <p data-testid="text-copyright">
-          © {new Date().getFullYear()} {storeName}. All rights reserved.
-        </p>
+      <footer 
+        className="border-t py-8 bg-background"
+        data-testid="footer"
+      >
+        <div className="container mx-auto px-4">
+          <div 
+            className="text-center"
+            data-testid="footer-content"
+          >
+            <p 
+              className="text-sm text-muted-foreground mb-2"
+              data-testid="text-copyright"
+            >
+              &copy; {new Date().getFullYear()} {storeName}. All rights
+              reserved.
+            </p>
+            <p 
+              className="text-xs text-muted-foreground"
+              data-testid="text-footer-tagline"
+            >
+              Premium Islamic Clothing & Accessories
+            </p>
+          </div>
+        </div>
       </footer>
     </div>
   );
