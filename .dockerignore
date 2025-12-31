@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+.replit
+.local
+*.log
+.git
+.github
+attached_assets
