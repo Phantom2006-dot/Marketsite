@@ -19,7 +19,7 @@ interface NavbarProps {
 export default function Navbar({
   categories = [],
   isTransparent = false,
-  logoUrl = "/logo.png",  // Default logo path
+  logoUrl = "Public/logo1.png",  // Default logo path
   logoAlt = "AL-MUSLIMAH Logo",  // Default alt text
 }: NavbarProps) {
   const [location] = useLocation();
